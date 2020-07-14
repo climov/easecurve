@@ -10,6 +10,9 @@
 #include <imgui.h>
 #include <imgui-SFML.h>
 
+#include <iostream>
+#include <fstream>
+
 namespace im = ImGui;
 
 namespace {
@@ -330,13 +333,201 @@ void exec(AppState& app)
     im::SFML::Shutdown();
 }
 
+void saveRgb(std::ostream& os, std::string_view name, sf::Color c)
+{
+    os << name << " " << static_cast<int>(c.r) << " " << static_cast<int>(c.g) << " " << static_cast<int>(c.b) << "\n";
+}
+
+void saveRgba(std::ostream& os, std::string_view name, sf::Color c)
+{
+    os << name << " " << static_cast<int>(c.r) << " " << static_cast<int>(c.g) << " " << static_cast<int>(c.b) << " " << static_cast<int>(c.a) << "\n";
+}
+
+void saveCurve(std::ostream& os, std::string name, const EaseCurve& curve)
+{
+    for (char& c: name) {
+        if (std::isspace(c)) {
+            c = '_';
+        }
+    }
+    os << "Curve " << name << "\n";
+    os << "lastPoint " << curve._lastPoint.x << " " << curve._lastPoint.y << "\n";
+    os << "xStretch " << curve._xStretch << "\n";
+    os << "radius " << curve._radius << "\n";
+    os << "firstRadius " << curve._firstRadius << "\n";
+    os << "lastRadius " << curve._lastRadius << "\n";
+    auto size = curve._points.size();
+    for (decltype (size) i = 0; i < size; ++i) {
+        os << "addPoint " << curve._points[i].x << " " << curve._points[i].y << " " << curve._radii[i] << "\n";
+    }
+    os << "\n";
+}
+
+void save(const AppState& app)
+{
+    std::ofstream os {"easecurve.state", std::ios::binary};
+    if (!os) {
+        return;
+    }
+
+    os << std::boolalpha;
+    os << "Settings\n";
+
+    saveRgb (os, "windowBg", app._windowBg);
+    saveRgba(os, "xAxisColor", app._xAxisColor);
+    saveRgba(os, "yAxisColor", app._yAxisColor);
+    saveRgba(os, "topColor",   app._topColor);
+    saveRgba(os, "rightColor", app._rightColor);
+    saveRgba(os, "curveColor", app._curveColor);
+    saveRgba(os, "speedColor", app._speedColor);
+    saveRgba(os, "accelColor", app._accelColor);
+
+    os << "border " << app._border.x << " " << app._border.y << "\n";
+    os << "selectedCurve " << app._selectedCurve << "\n";
+    os << "showCircles " << app._showCircles << "\n";
+    os << "showSpeed " << app._showSpeed << "\n";
+    os << "showAccel " << app._showAccel << "\n";
+    os << "keepAspectRatio " << app._keepAspectRatio << "\n";
+
+    os << "\n";
+
+    if (app._curves.empty()) {
+        saveCurve(os, "Untitled", app._curve);
+    } else {
+        for (const AppState::CurveData& curve: app._curves) {
+            saveCurve(os, curve._name, curve._saved);
+        }
+    }
+}
+
+void loadRgb(std::istream& is, sf::Color& c)
+{
+    int v = 0;
+    if (!is.eof()) {
+        is >> v;
+        c.r = static_cast<sf::Uint8>(v);
+    }
+    if (!is.eof()) {
+        is >> v;
+        c.g = static_cast<sf::Uint8>(v);
+    }
+    if (!is.eof()) {
+        is >> v;
+        c.b = static_cast<sf::Uint8>(v);
+    }
+}
+
+void loadRgba(std::istream& is, sf::Color& c)
+{
+    int v = 0;
+    if (!is.eof()) {
+        is >> v;
+        c.r = static_cast<sf::Uint8>(v);
+    }
+    if (!is.eof()) {
+        is >> v;
+        c.g = static_cast<sf::Uint8>(v);
+    }
+    if (!is.eof()) {
+        is >> v;
+        c.b = static_cast<sf::Uint8>(v);
+    }
+    if (!is.eof()) {
+        is >> v;
+        c.a = static_cast<sf::Uint8>(v);
+    }
+}
+
+std::string loadCurve(std::istream& is, std::string& name, EaseCurve& curve)
+{
+    std::string str;
+    if (is.eof()) {
+        return str;
+    }
+    is >> name;
+    for (char& c: name) {
+        if (c == '_') {
+            c = ' ';
+        }
+    }
+    while (!is.eof()) {
+        is >> str;
+        if (str == "Curve")             break;
+        else if (str == "Settings")     break;
+        else if (str == "lastPoint")    is >> curve._lastPoint.x >> curve._lastPoint.y;
+        else if (str == "radius")       is >> curve._radius;
+        else if (str == "xStretch")     is >> curve._xStretch;
+        else if (str == "firstRadius")  is >> curve._firstRadius;
+        else if (str == "lastRadius")   is >> curve._lastRadius;
+        else if (str == "addPoint") {
+            float x = 0;
+            float y = 0;
+            float r = 0;
+            is >> x >> y >> r;
+            curve.addPoint(x, y, r);
+        }
+        str.clear();
+    }
+    curve.solve();
+    return str;
+}
+
+void load(AppState& app)
+{
+    std::ifstream is {"easecurve.state", std::ios::binary};
+    if (!is) {
+        return;
+    }
+    is >> std::boolalpha;
+
+    std::string str;
+    if (!is.eof()) {
+        is >> str;
+        do {
+            if (str == "Settings") {
+                // load the settings;
+                while (true) {
+                    if (is.eof()) {
+                        break;
+                    }
+                    is >> str;
+                    if (str == "Curve") break;
+                    else if (str == "windowBg") loadRgb(is, app._windowBg);
+                    else if (str == "xAxisColor") loadRgba(is, app._xAxisColor);
+                    else if (str == "yAxisColor") loadRgba(is, app._yAxisColor);
+                    else if (str == "topColor"  ) loadRgba(is, app._topColor);
+                    else if (str == "rightColor") loadRgba(is, app._rightColor);
+                    else if (str == "curveColor") loadRgba(is, app._curveColor);
+                    else if (str == "speedColor") loadRgba(is, app._speedColor);
+                    else if (str == "accelColor") loadRgba(is, app._accelColor);
+                    else if (str == "border") is >> app._border.x >> app._border.y;
+                    else if (str == "selectedCurve") is >> app._selectedCurve;
+                    else if (str == "showCircles") is >> app._showCircles;
+                    else if (str == "showSpeed") is >> app._showSpeed;
+                    else if (str == "showAccel") is >> app._showAccel;
+                    else if (str == "keepAspectRatio") is >> app._keepAspectRatio;
+                }
+            }
+            if (str == "Curve") {
+                std::string name;
+                EaseCurve curve;
+                str = loadCurve(is, name, curve);
+                app._curve = curve;
+                //app._curves.push_back({name, curve, curve});
+            }
+        } while (!is.eof());
+    }
+}
+
 } // namespace
 
 int main()
 {
     AppState app;
     init(app);
+    load(app);
     exec(app);
+    save(app);
 
     return 0;
 }

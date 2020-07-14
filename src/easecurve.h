@@ -27,6 +27,10 @@ public: // setters
     void setRadius(float radius) { _radius = radius; setRadius(); }
     //! Set the horizontal stretch factor for the ellipses. A factor of 2 means the horizonal radius is twice as large.
     void setXStretch(float stretch) { _xStretch = stretch; solve(); }
+    //! Set the radius of the first point
+    void setFirstRadius(float radius) { _firstRadius = radius; solve(); }
+    //! Set the radius of the last point
+    void setLastRadius(float radius) { _lastRadius = radius; solve(); }
 
     //! Add an intermediate point at the end (right before the last point) and sets its circle radius.
     void addPoint(float x, float y, float radius);
