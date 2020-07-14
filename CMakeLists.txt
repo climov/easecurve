@@ -50,6 +50,7 @@ if(WIN32)
         -wd4061
         -wd4710 -wd4711
         -wd4738
+        -wd4582 -wd4365
     )
 else()
     string(JOIN " " SRC_COMPILE_FLAGS
@@ -71,7 +72,8 @@ target_include_directories(easecurve SYSTEM PRIVATE "${SFML_PATH}/include" "${FS
 
 target_link_directories(easecurve PRIVATE "${SFML_LIB_PATH}")
 if(WIN32)
-    target_link_libraries(easecurve PRIVATE sfml-graphics-d sfml-window-d sfml-system-d sfml-audio-d)
+    find_package(OpenGL REQUIRED)
+    target_link_libraries(easecurve PRIVATE sfml-graphics-d sfml-window-d sfml-system-d sfml-audio-d ${OPENGL_LIBRARIES})
 else()
     find_package(OpenGL REQUIRED)
     target_link_libraries(easecurve PRIVATE sfml-graphics sfml-window sfml-system sfml-audio ${OPENGL_LIBRARIES} c++)

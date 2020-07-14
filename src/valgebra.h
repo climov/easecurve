@@ -77,8 +77,8 @@ sf::Vector2<T> unitOrZero(const sf::Vector2<T> v)
     return {};
 }
 
-template <typename T, trig::AngleUnit unit>
-sf::Vector2<T> unit(const trig::Angle<T, unit> ang)
+template <typename T, trig::AngleUnit AU>
+sf::Vector2<T> unit(const trig::Angle<T, AU> ang)
 {
     return {trig::cos(ang), trig::sin(ang)};
 }

@@ -14,7 +14,6 @@
 
 #include <array>
 
-using namespace std::chrono_literals;
 using namespace trig::literals;
 
 namespace {
