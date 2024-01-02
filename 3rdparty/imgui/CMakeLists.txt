@@ -1,4 +1,4 @@
-set(IMGUI_PATH imgui-1.89.5)
+set(IMGUI_PATH imgui)
 add_library(imgui STATIC)
 target_sources(imgui PRIVATE
     ${IMGUI_PATH}/imgui.cpp
