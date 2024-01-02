@@ -7,3 +7,9 @@
 [submodule "3rdparty/imgui/imgui"]
 	path = 3rdparty/imgui/imgui
 	url = git@github.com:climov/imgui.git
+[submodule "3rdparty/sokol/sokol"]
+	path = 3rdparty/sokol/sokol
+	url = git@github.com:climov/sokol.git
+[submodule "3rdparty/sokol/sokol_gp"]
+	path = 3rdparty/sokol/sokol_gp
+	url = git@github.com:climov/sokol_gp.git
