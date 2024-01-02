@@ -1,3 +1,6 @@
 [submodule "3rdparty/std.module/std.module"]
 	path = 3rdparty/std.module/std.module
 	url = git@github.com:climov/std.module.git
+[submodule "3rdparty/alx/alx"]
+	path = 3rdparty/alx/alx
+	url = git@github.com:climov/alx.git
