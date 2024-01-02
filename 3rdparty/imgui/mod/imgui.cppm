@@ -115,8 +115,8 @@ export {
     using ::ImGui::ShowDemoWindow;
     using ::ImGui::ShowMetricsWindow;
     using ::ImGui::ShowDebugLogWindow;
-    using ::ImGui::ShowStackToolWindow;
-    using ::ImGui::ShowAboutWindow;
+    // using ::ImGui::ShowStackToolWindow;
+    // using ::ImGui::ShowAboutWindow;
     using ::ImGui::ShowStyleEditor;
     using ::ImGui::ShowStyleSelector;
     using ::ImGui::ShowFontSelector;
@@ -483,8 +483,8 @@ export {
     using ::ImGui::GetStyleColorName;
     using ::ImGui::SetStateStorage;
     using ::ImGui::GetStateStorage;
-    using ::ImGui::BeginChildFrame;
-    using ::ImGui::EndChildFrame;
+    // using ::ImGui::BeginChildFrame;
+    // using ::ImGui::EndChildFrame;
 
     using ::ImGui::CalcTextSize;
 
