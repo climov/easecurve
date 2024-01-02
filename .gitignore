@@ -72,3 +72,6 @@ CMakeLists.txt.user
 
 # unused assets
 assets/unused/
+
+# CLion generated files
+.idea
