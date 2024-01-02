@@ -141,13 +141,12 @@ void exec(AppState& app)
                 break;
             case sf::Event::KeyPressed:
                 switch (event.key.code) {
-                case sf::Keyboard::Num0:
+                case sf::Keyboard::Q:
+                    app._window.close();
                     break;
-                case sf::Keyboard::Equal:
-                    break;
-                case sf::Keyboard::Z:
-                    break;
-                case sf::Keyboard::X:
+                case sf::Keyboard::C:
+                    app._curve = {};
+                    app._curve.solve();
                     break;
                 default:
                     break;
@@ -164,12 +163,12 @@ void exec(AppState& app)
         }
 
         im::SFML::Update(app._window, imguiClock.restart());
-        const bool hasFocus = app._window.hasFocus();
-        if (hasFocus) {
-            if (/*sf::Keyboard::isKeyPressed(sf::Keyboard::Escape) || */sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) {
-                app._window.close();
-            }
-        }
+        //const bool hasFocus = app._window.hasFocus();
+        //if (hasFocus) {
+        //    if (/*sf::Keyboard::isKeyPressed(sf::Keyboard::Escape) || */sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) {
+        //        app._window.close();
+        //    }
+        //}
 
         const sf::Vector2u windowSize = app._window.getSize();
         im::Begin("Info");
@@ -188,9 +187,12 @@ void exec(AppState& app)
             }
 
             im::Spacing();
-            //if (im::SliderFloat("Min. Distance", &app._curve._minDistance, 0.f, maxRadius)) {
-            //    solve(app._curve);
-            //}
+            if (im::SliderFloat("Min. Distance", &app._curve._minDistance, 0.f, maxRadius)) {
+                app._curve.solve();
+            }
+            if (im::SliderFloat("Precision", &app._curve._precision, 0.f, 1.f, "%.6f")) {
+                app._curve.solve();
+            }
             if (im::SliderFloat("X Stretch Factor", &app._curve._xStretch, 0.1f, 10.f)) {
                 app._curve.solve();
             }
@@ -214,6 +216,15 @@ void exec(AppState& app)
                 fixAspectRatioByX(app);
                 app._curve.solve();
             }
+            im::Separator();
+            if (im::Checkbox("Autoflip", &app._curve._autoFlip)) {
+                app._curve.solve();
+            }
+            if (im::Checkbox("Reduce Radii", &app._curve._reduceRadii)) {
+                app._curve.solve();
+            }
+            im::Text("Iterations: %d", app._curve._iterations);
+            im::Text("Time: %lld us", app._curve._solveTimeUs);
         }
 
         im::Spacing();
@@ -279,18 +290,19 @@ void exec(AppState& app)
             im::Checkbox("Circles", &app._showCircles);
             im::Checkbox("Speed", &app._showSpeed);
             im::Checkbox("Acceleration", &app._showAccel);
+            im::Checkbox("Guides", &app._showGuides);
+            im::Checkbox("Poly Line", &app._showPolyLine);
         }
 
         im::Spacing();
         if (im::CollapsingHeader("Colors"/*, ImGuiTreeNodeFlags_DefaultOpen*/)) {
             ColorEdit("Window Bg", app._windowBg);
             ColorEditAlpha("Curve", app._curveColor);
-            ColorEditAlpha("X Axis", app._xAxisColor);
-            ColorEditAlpha("Y Axis", app._yAxisColor);
-            ColorEditAlpha("X guides", app._topColor);
-            ColorEditAlpha("Y guides", app._rightColor);
+            ColorEditAlpha("Axis", app._axisColor);
+            ColorEditAlpha("Guides", app._guideColor);
             ColorEditAlpha("Speed", app._speedColor);
             ColorEditAlpha("Acceleration", app._accelColor);
+            ColorEditAlpha("Error", app._errorColor);
         }
 
         im::Spacing();
@@ -310,6 +322,10 @@ void exec(AppState& app)
         }
 
         im::Spacing(); im::Separator(); im::Spacing();
+        if (im::Button("[C]lear")) {
+            app._curve = {};
+            app._curve.solve();
+        }
         if (im::Button("[Q]uit")) {
             app._window.close();
         }
@@ -333,73 +349,18 @@ void exec(AppState& app)
     im::SFML::Shutdown();
 }
 
+template <typename... Ts>
+void saveValues(std::ostream& os, std::string_view name, const Ts&... values)
+{
+    os << name;
+    ((os << " " << values), ...);
+    os << "\n";
+}
+
 void saveRgb(std::ostream& os, std::string_view name, sf::Color c)
 {
-    os << name << " " << static_cast<int>(c.r) << " " << static_cast<int>(c.g) << " " << static_cast<int>(c.b) << "\n";
+    saveValues(os, name, static_cast<int>(c.r), static_cast<int>(c.g), static_cast<int>(c.b));
 }
-
-void saveRgba(std::ostream& os, std::string_view name, sf::Color c)
-{
-    os << name << " " << static_cast<int>(c.r) << " " << static_cast<int>(c.g) << " " << static_cast<int>(c.b) << " " << static_cast<int>(c.a) << "\n";
-}
-
-void saveCurve(std::ostream& os, std::string name, const EaseCurve& curve)
-{
-    for (char& c: name) {
-        if (std::isspace(c)) {
-            c = '_';
-        }
-    }
-    os << "Curve " << name << "\n";
-    os << "lastPoint " << curve._lastPoint.x << " " << curve._lastPoint.y << "\n";
-    os << "xStretch " << curve._xStretch << "\n";
-    os << "radius " << curve._radius << "\n";
-    os << "firstRadius " << curve._firstRadius << "\n";
-    os << "lastRadius " << curve._lastRadius << "\n";
-    auto size = curve._points.size();
-    for (decltype (size) i = 0; i < size; ++i) {
-        os << "addPoint " << curve._points[i].x << " " << curve._points[i].y << " " << curve._radii[i] << "\n";
-    }
-    os << "\n";
-}
-
-void save(const AppState& app)
-{
-    std::ofstream os {"easecurve.state", std::ios::binary};
-    if (!os) {
-        return;
-    }
-
-    os << std::boolalpha;
-    os << "Settings\n";
-
-    saveRgb (os, "windowBg", app._windowBg);
-    saveRgba(os, "xAxisColor", app._xAxisColor);
-    saveRgba(os, "yAxisColor", app._yAxisColor);
-    saveRgba(os, "topColor",   app._topColor);
-    saveRgba(os, "rightColor", app._rightColor);
-    saveRgba(os, "curveColor", app._curveColor);
-    saveRgba(os, "speedColor", app._speedColor);
-    saveRgba(os, "accelColor", app._accelColor);
-
-    os << "border " << app._border.x << " " << app._border.y << "\n";
-    os << "selectedCurve " << app._selectedCurve << "\n";
-    os << "showCircles " << app._showCircles << "\n";
-    os << "showSpeed " << app._showSpeed << "\n";
-    os << "showAccel " << app._showAccel << "\n";
-    os << "keepAspectRatio " << app._keepAspectRatio << "\n";
-
-    os << "\n";
-
-    if (app._curves.empty()) {
-        saveCurve(os, "Untitled", app._curve);
-    } else {
-        for (const AppState::CurveData& curve: app._curves) {
-            saveCurve(os, curve._name, curve._saved);
-        }
-    }
-}
-
 void loadRgb(std::istream& is, sf::Color& c)
 {
     int v = 0;
@@ -417,6 +378,10 @@ void loadRgb(std::istream& is, sf::Color& c)
     }
 }
 
+void saveRgba(std::ostream& os, std::string_view name, sf::Color c)
+{
+    saveValues(os, name, static_cast<int>(c.r), static_cast<int>(c.g), static_cast<int>(c.b), static_cast<int>(c.a));
+}
 void loadRgba(std::istream& is, sf::Color& c)
 {
     int v = 0;
@@ -438,6 +403,29 @@ void loadRgba(std::istream& is, sf::Color& c)
     }
 }
 
+void saveCurve(std::ostream& os, std::string name, const EaseCurve& curve)
+{
+    for (char& c: name) {
+        if (std::isspace(c)) {
+            c = '_';
+        }
+    }
+    saveValues(os, "Curve", name);
+    saveValues(os, "lastPoint",     curve._lastPoint.x, curve._lastPoint.y);
+    saveValues(os, "xStretch",      curve._xStretch);
+    saveValues(os, "radius",        curve._radius);
+    saveValues(os, "firstRadius",   curve._firstRadius);
+    saveValues(os, "lastRadius",    curve._lastRadius);
+    saveValues(os, "minDistance",   curve._minDistance); //
+    saveValues(os, "precision",     curve._precision); //
+    saveValues(os, "autoFlip",      curve._autoFlip);
+    saveValues(os, "reduceRadii",   curve._reduceRadii); //
+    auto size = curve._points.size();
+    for (decltype (size) i = 0; i < size; ++i) {
+        saveValues(os, "addPoint", curve._points[i].x, curve._points[i].y, curve._radii[i]);
+    }
+    os << "\n";
+}
 std::string loadCurve(std::istream& is, std::string& name, EaseCurve& curve)
 {
     std::string str;
@@ -459,6 +447,10 @@ std::string loadCurve(std::istream& is, std::string& name, EaseCurve& curve)
         else if (str == "xStretch")     is >> curve._xStretch;
         else if (str == "firstRadius")  is >> curve._firstRadius;
         else if (str == "lastRadius")   is >> curve._lastRadius;
+        else if (str == "minDistance")  is >> curve._minDistance;
+        else if (str == "precision")    is >> curve._precision;
+        else if (str == "autoFlip")     is >> curve._autoFlip;
+        else if (str == "reduceRadii")  is >> curve._reduceRadii;
         else if (str == "addPoint") {
             float x = 0;
             float y = 0;
@@ -472,6 +464,43 @@ std::string loadCurve(std::istream& is, std::string& name, EaseCurve& curve)
     return str;
 }
 
+void save(const AppState& app)
+{
+    std::ofstream os {"easecurve.state", std::ios::binary};
+    if (!os) {
+        return;
+    }
+
+    os << std::boolalpha;
+    os << "Settings\n";
+
+    saveRgb (os, "windowBg",   app._windowBg);
+    saveRgba(os, "axisColor",  app._axisColor);
+    saveRgba(os, "guideColor", app._guideColor);
+    saveRgba(os, "curveColor", app._curveColor);
+    saveRgba(os, "speedColor", app._speedColor);
+    saveRgba(os, "accelColor", app._accelColor);
+    saveRgba(os, "errorColor", app._errorColor);
+
+    saveValues(os, "border",            app._border.x, app._border.y);
+    saveValues(os, "selectedCurve",     app._selectedCurve);
+    saveValues(os, "showCircles",       app._showCircles);
+    saveValues(os, "showSpeed",         app._showSpeed);
+    saveValues(os, "showAccel",         app._showAccel);
+    saveValues(os, "showGuides",        app._showGuides);
+    saveValues(os, "showPolyLine",      app._showPolyLine);
+    saveValues(os, "keepAspectRatio",   app._keepAspectRatio);
+
+    os << "\n";
+
+    if (app._curves.empty()) {
+        saveCurve(os, "Untitled", app._curve);
+    } else {
+        for (const AppState::CurveData& curve: app._curves) {
+            saveCurve(os, curve._name, curve._saved);
+        }
+    }
+}
 void load(AppState& app)
 {
     std::ifstream is {"easecurve.state", std::ios::binary};
@@ -492,20 +521,21 @@ void load(AppState& app)
                     }
                     is >> str;
                     if (str == "Curve") break;
-                    else if (str == "windowBg") loadRgb(is, app._windowBg);
-                    else if (str == "xAxisColor") loadRgba(is, app._xAxisColor);
-                    else if (str == "yAxisColor") loadRgba(is, app._yAxisColor);
-                    else if (str == "topColor"  ) loadRgba(is, app._topColor);
-                    else if (str == "rightColor") loadRgba(is, app._rightColor);
-                    else if (str == "curveColor") loadRgba(is, app._curveColor);
-                    else if (str == "speedColor") loadRgba(is, app._speedColor);
-                    else if (str == "accelColor") loadRgba(is, app._accelColor);
-                    else if (str == "border") is >> app._border.x >> app._border.y;
-                    else if (str == "selectedCurve") is >> app._selectedCurve;
-                    else if (str == "showCircles") is >> app._showCircles;
-                    else if (str == "showSpeed") is >> app._showSpeed;
-                    else if (str == "showAccel") is >> app._showAccel;
-                    else if (str == "keepAspectRatio") is >> app._keepAspectRatio;
+                    else if (str == "windowBg")         loadRgb(is, app._windowBg);
+                    else if (str == "axisColor")        loadRgba(is, app._axisColor);
+                    else if (str == "guideColor")       loadRgba(is, app._guideColor);
+                    else if (str == "curveColor")       loadRgba(is, app._curveColor);
+                    else if (str == "speedColor")       loadRgba(is, app._speedColor);
+                    else if (str == "accelColor")       loadRgba(is, app._accelColor);
+                    else if (str == "errorColor")       loadRgba(is, app._errorColor);
+                    else if (str == "border")           is >> app._border.x >> app._border.y;
+                    else if (str == "selectedCurve")    is >> app._selectedCurve;
+                    else if (str == "showCircles")      is >> app._showCircles;
+                    else if (str == "showSpeed")        is >> app._showSpeed;
+                    else if (str == "showAccel")        is >> app._showAccel;
+                    else if (str == "showGuides")       is >> app._showGuides;
+                    else if (str == "showPolyLine")     is >> app._showPolyLine;
+                    else if (str == "keepAspectRatio")  is >> app._keepAspectRatio;
                 }
             }
             if (str == "Curve") {

@@ -25,19 +25,20 @@ struct AppState
 
     // settings
     sf::Color _windowBg = sf::Color::Black;
-    sf::Color _xAxisColor = sf::Color::Green;
-    sf::Color _yAxisColor = sf::Color::Green;
-    sf::Color _topColor = sf::Color::Green;
-    sf::Color _rightColor = sf::Color::Green;
+    sf::Color _axisColor = sf::Color::Green;
+    sf::Color _guideColor = sf::Color::Green;
     sf::Color _curveColor = sf::Color::White;
     sf::Color _speedColor = sf::Color::Yellow;
     sf::Color _accelColor = sf::Color::Cyan;
+    sf::Color _errorColor = sf::Color::Red;
 
     sf::Vector2i _border { 50, 50 };
     int          _selectedCurve = -1;
     bool         _showCircles = true;
     bool         _showSpeed = true;
     bool         _showAccel = true;
+    bool         _showGuides = true;
+    bool         _showPolyLine = true;
     bool         _keepAspectRatio = true;
 
     // calculated

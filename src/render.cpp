@@ -145,22 +145,23 @@ void drawCoordinates(AppState& app)
     const sf::Vector2f topRight = {windowSize.x - border.x, border.y};
 
     // horiz axis
-    drawSolidArrow(app._window, {0.f, botLeft.y}, {windowSize.x * 1.f, 0.f}, app._xAxisColor);
+    drawSolidArrow(app._window, {0.f, botLeft.y}, {windowSize.x * 1.f, 0.f}, app._axisColor);
     // vert axis
-    drawSolidArrow(app._window, {botLeft.x, windowSize.y * 1.f}, {0.f, windowSize.y * -1.f}, app._yAxisColor);
-    // top
-    drawDottedLine(app._window, {botLeft.x, topRight.y}, topRight, app._topColor);
-    // right
-    drawDottedLine(app._window, {topRight.x, botLeft.y}, topRight, app._rightColor);
+    drawSolidArrow(app._window, {botLeft.x, windowSize.y * 1.f}, {0.f, windowSize.y * -1.f}, app._axisColor);
 
-    // segments
-    const float xStretch = app._curve._xStretch;
-    for (const EaseCurve::Segment& segment: app._curve._scaledSegments) {
-        const float finalY = segment.evaluate(segment.finalX);
-        // x
-        drawDottedLine(app._window, mapToScreen(app, {0.f, finalY}), mapToScreen(app, {segment.finalX * xStretch, finalY}), app._topColor);
-        // y
-        drawDottedLine(app._window, mapToScreen(app, {segment.finalX * xStretch, 0}), mapToScreen(app, {segment.finalX * xStretch, finalY}), app._topColor);
+    if (app._showGuides) {
+        // segments
+        const float xStretch = app._curve._xStretch;
+        for (const EaseCurve::Segment& segment: app._curve._scaledSegments) {
+            const float initalY = segment.evaluate(segment.initialX);
+            const float finalY = segment.evaluate(segment.finalX);
+            const sf::Color vcolor = (segment.finalX >= segment.initialX) ? app._guideColor : app._errorColor;
+            const sf::Color hcolor = (finalY >= initalY) ? app._guideColor : app._errorColor;
+            // horiz
+            drawDottedLine(app._window, mapToScreen(app, {0.f, finalY}), mapToScreen(app, {segment.finalX * xStretch, finalY}), hcolor);
+            // vert
+            drawDottedLine(app._window, mapToScreen(app, {segment.finalX * xStretch, 0}), mapToScreen(app, {segment.finalX * xStretch, finalY}), vcolor);
+        }
     }
 }
 
@@ -215,51 +216,73 @@ void drawAccel(AppState& app)
     }
 }
 
-void drawRadii(AppState& app)
+void drawCircles(AppState& app)
 {
+    if (!app._showCircles) {
+        return;
+    }
+
     const float xStretch = app._curve._xStretch;
+    // first circle
     {
         const sf::Vector2f center = mapToScreen(app, {app._curve._scaledFirstCenter.x * xStretch, app._curve._scaledFirstCenter.y});
-        const sf::Color color = app._curve._firstRadiusValid ? app._curveColor : sf::Color::Red;
-        drawDottedLine(app._window, center, mapToScreen(app, EaseCurve::kFirstPoint), color, 21);
+
+        // radius
+        drawDottedLine(app._window, center, mapToScreen(app, EaseCurve::kFirstPoint), app._curveColor, 21);
         //drawSolidLine(app._window, center, mapToScreen(app, EaseCurve::kStartPoint), app._curveColor);
+
+        // center
         drawDisc(app._window, center, 2.f, app._curveColor);
         //drawDot(app._window, center, app._curveColor);
-        if (app._showCircles) {
-            drawDottedEllipse(app, {app._curve._scaledFirstCenter.x * xStretch, app._curve._scaledFirstCenter.y}, app._curve._firstRadius, xStretch, color);
-        }
+
+        // circle
+        drawDottedEllipse(app, {app._curve._scaledFirstCenter.x * xStretch, app._curve._scaledFirstCenter.y}, app._curve._firstRadius, xStretch, app._curveColor);
     }
+
+    // last circle
     {
         const sf::Vector2f center = mapToScreen(app, {app._curve._scaledLastCenter.x * xStretch, app._curve._scaledLastCenter.y});
-        const sf::Color color = app._curve._lastRadiusValid ? app._curveColor : sf::Color::Red;
-        drawDottedLine(app._window, center, mapToScreen(app, app._curve._lastPoint), color, 21);
+
+        // radius
+        drawDottedLine(app._window, center, mapToScreen(app, app._curve._lastPoint), app._curveColor, 21);
         //drawSolidLine(app._window, center, mapToScreen(app, app._curve._lastPoint), app._curveColor);
+
+        // center
         drawDisc(app._window, center, 2.f, app._curveColor);
         //drawDot(app._window, center, app._curveColor);
-        if (app._showCircles) {
-            drawDottedEllipse(app, {app._curve._scaledLastCenter.x * xStretch, app._curve._scaledLastCenter.y}, app._curve._lastRadius, xStretch, color);
-        }
+
+        // circle
+        drawDottedEllipse(app, {app._curve._scaledLastCenter.x * xStretch, app._curve._scaledLastCenter.y}, app._curve._lastRadius, xStretch, app._curveColor);
     }
+
+    // intermediate circles
     auto count = app._curve._points.size();
     for (decltype(count) i = 0; i < count; ++i) {
         const sf::Vector2f center = mapToScreen(app, {app._curve._scaledCenters[i].x * xStretch, app._curve._scaledCenters[i].y});
-        const sf::Color color = app._curve._radiiValid[i] ? app._curveColor : sf::Color::Red;
-        drawDottedLine(app._window, center, mapToScreen(app, app._curve._points[i]), color, 21);
-        drawDisc(app._window, center, 2.f, app._curve._sides[i] ? sf::Color::Green : sf::Color::Red);
-        if (app._showCircles) {
-            drawDottedEllipse(app, {app._curve._scaledCenters[i].x * xStretch, app._curve._scaledCenters[i].y}, app._curve._radii[i], xStretch, color);
-        }
+
+        // radius
+        drawDottedLine(app._window, center, mapToScreen(app, app._curve._points[i]), app._curveColor, 21);
+        //drawDisc(app._window, center, 2.f, app._curveColor);
+
+        // center
+        drawDisc(app._window, center, 2.f, app._curve._sides[i] == app._curve._originalSides[i] ? app._curveColor : app._errorColor);
+
+        // circle
+        drawDottedEllipse(app, {app._curve._scaledCenters[i].x * xStretch, app._curve._scaledCenters[i].y}, app._curve._radii[i], xStretch, app._curveColor);
     }
 }
 
 void drawPoly(AppState& app)
 {
+    if (!app._showPolyLine) {
+        return;
+    }
     EaseCurve::Point start = EaseCurve::kFirstPoint;
     auto i = app._curve._points.size();
     i = 0;
     for (EaseCurve::Point point: app._curve._points) {
         const bool valid = app._curve._pointsXValid[i] && app._curve._pointsYValid[i];
-        const sf::Color color = valid ? app._curveColor : sf::Color::Red;
+        const sf::Color color = valid ? app._curveColor : app._errorColor;
         drawDottedLine(app._window, mapToScreen(app, start), mapToScreen(app, point), color);
         start = point;
         ++i;
@@ -312,7 +335,7 @@ void render(AppState& app)
     app._window.clear(app._windowBg);
     drawCoordinates(app);
     drawPoly(app);
-    drawRadii(app);
+    drawCircles(app);
     drawCurve(app);
     drawSpeed(app);
     drawAccel(app);

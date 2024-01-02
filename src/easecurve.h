@@ -23,12 +23,16 @@ public: // setters
 
     //! Set the position of the last point. The last point is also the maximum x & y for the curve
     void setLastPoint(float x, float y) { _lastPoint = {x, y}; solve(); }
+
     //! Set the "global" radius for the curve circles. This gets copied into every circle.
     void setRadius(float radius) { _radius = radius; setRadius(); }
+
     //! Set the horizontal stretch factor for the ellipses. A factor of 2 means the horizonal radius is twice as large.
     void setXStretch(float stretch) { _xStretch = stretch; solve(); }
+
     //! Set the radius of the first point
     void setFirstRadius(float radius) { _firstRadius = radius; solve(); }
+
     //! Set the radius of the last point
     void setLastRadius(float radius) { _lastRadius = radius; solve(); }
 
@@ -65,6 +69,12 @@ public: // internal (private)
     };
 
     // internal helper structs
+    enum class Side
+    {
+        Auto,
+        ForceTrue,
+        ForceFalse,
+    };
     enum class SegmentType
     {
         Circle,
@@ -96,6 +106,9 @@ public: // internal (private)
         float speed(float x) const;
         float accel(float x) const;
 
+        float initialY() const { return evaluate(initialX); }
+        float finalY() const { return evaluate(finalX); }
+
         float initialX;
         float finalX;
         union {
@@ -108,6 +121,8 @@ public: // internal (private)
 public: // internal (private)
     // params
     float _xStretch = 1.0f;
+    float _minDistance = kMinDistance;
+    float _precision = kPrecision;
     float _radius = kDefaultRadius;
     float _firstRadius = kDefaultRadius;
     float _lastRadius = kDefaultRadius;
@@ -118,8 +133,17 @@ public: // internal (private)
     // calculated by invoking solve()
     Point _scaledFirstCenter;
     Point _scaledLastCenter;
+    float _firstReducedRadius;
+    float _lastReducedRadius;
     std::vector<Point> _scaledCenters;
     std::vector<bool> _sides;
+    std::vector<bool> _originalSides;
+    std::vector<Side> _autoSides;
+    std::vector<float> _reducedRadii;
+
+    // debugging information
+    long long _solveTimeUs = 0;
+    int _iterations = 0;
 
     // needed for evaluate(), speed() and accel()
     std::vector<Segment> _scaledSegments;
@@ -127,18 +151,19 @@ public: // internal (private)
     // calculated by invoking validate()
     std::vector<bool> _pointsXValid;
     std::vector<bool> _pointsYValid;
-    std::vector<bool> _radiiValid;
     bool _valid = true;
-    bool _radiusValid = true;
-    bool _firstRadiusValid = true;
-    bool _lastRadiusValid = true;
+
+    // more params
+    bool _autoFlip = true;
+    bool _reduceRadii = true;
 
 public: // internal (private)
     // default values
     static constexpr Point kFirstPoint {0.f, 0.f};
-    static constexpr Point kDefaultLastPoint {1.f, 2.f};
-    static constexpr float kDefaultRadius = 0.1f;
+    static constexpr Point kDefaultLastPoint {10.f, 10.f};
+    static constexpr float kDefaultRadius = 1.f;
     static constexpr float kMinDistance = 0.01f;
+    static constexpr float kPrecision = 0.000001f;
 };
 
 #endif // EASE_CURVE
