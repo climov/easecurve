@@ -18,7 +18,7 @@ export {
     using ::SG_NUM_SHADER_STAGES;
     using ::SG_NUM_INFLIGHT_FRAMES;
     using ::SG_MAX_COLOR_ATTACHMENTS;
-    using ::SG_MAX_SHADERSTAGE_BUFFERS;
+    // using ::SG_MAX_SHADERSTAGE_BUFFERS;
     using ::SG_MAX_SHADERSTAGE_IMAGES;
     using ::SG_MAX_SHADERSTAGE_UBS;
     using ::SG_MAX_UB_MEMBERS;
@@ -58,7 +58,7 @@ export {
     using ::sg_blend_factor;
     using ::sg_blend_op;
     using ::sg_color_mask;
-    using ::sg_action;
+    // using ::sg_action;
 
     using ::sg_color_attachment_action;
     using ::sg_depth_attachment_action;
@@ -74,14 +74,14 @@ export {
     using ::sg_shader_image_desc;
     using ::sg_shader_stage_desc;
     using ::sg_shader_desc;
-    using ::sg_buffer_layout_desc;
-    using ::sg_vertex_attr_desc;
-    using ::sg_layout_desc;
+    // using ::sg_buffer_layout_desc;
+    // using ::sg_vertex_attr_desc;
+    // using ::sg_layout_desc;
     using ::sg_stencil_face_state;
     using ::sg_stencil_state;
     using ::sg_depth_state;
     using ::sg_blend_state;
-    using ::sg_color_state;
+    // using ::sg_color_state;
     using ::sg_pipeline_desc;
     using ::sg_pass_attachment_desc;
     using ::sg_pass_desc;

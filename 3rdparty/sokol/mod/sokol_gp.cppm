@@ -21,7 +21,7 @@ export {
     using ::sgp_mat2x3;
     using ::sgp_color;
     using ::sgp_uniform;
-    using ::sgp_images_uniform;
+    // using ::sgp_images_uniform;
     using ::sgp_state;
     using ::sgp_desc;
     using ::sgp_pipeline_desc;
@@ -83,8 +83,8 @@ export {
     using ::sgp_draw_filled_rect;
     using ::sgp_draw_textured_rects;
     using ::sgp_draw_textured_rect;
-    using ::sgp_draw_textured_rects_ex;
-    using ::sgp_draw_textured_rect_ex;
+    // using ::sgp_draw_textured_rects_ex;
+    // using ::sgp_draw_textured_rect_ex;
 
     using ::sgp_query_state;
     using ::sgp_query_desc;
