@@ -14,7 +14,7 @@ void fixAspectRatioByX(AppState& app)
 {
     if (app._keepAspectRatio) {
         const float ratio = app._curve._lastPoint.y() / app._curve._lastPoint.x();
-        const va::Vec2i windowSize = {sapp_width(), sapp_height()};
+        const va::Vec2i windowSize = {{sapp_width(), sapp_height()}};
         const int width = windowSize.x() - 2 * app._border.x();
         const int height = static_cast<int>(static_cast<float>(width) * ratio);
         if (height <= windowSize.y()) {
@@ -30,7 +30,7 @@ void fixAspectRatioByY(AppState& app)
 {
     if (app._keepAspectRatio) {
         const float ratio = app._curve._lastPoint.x() / app._curve._lastPoint.y();
-        const va::Vec2i windowSize = {sapp_width(), sapp_height()};
+        const va::Vec2i windowSize = {{sapp_width(), sapp_height()}};
         const int height = windowSize.y() - 2 * app._border.y();
         const int width = static_cast<int>(static_cast<float>(height) * ratio);
         if (width <= windowSize.x()) {
@@ -45,7 +45,7 @@ void fixAspectRatioByY(AppState& app)
 void fixAspectRatio(AppState& app)
 {
     if (app._keepAspectRatio) {
-        const va::Vec2i windowSize = {sapp_width(), sapp_height()};
+        const va::Vec2i windowSize = {{sapp_width(), sapp_height()}};
         const float xRatio = static_cast<float>(windowSize.x()) / app._curve._lastPoint.x();
         const float yRatio = static_cast<float>(windowSize.y()) / app._curve._lastPoint.y();
         if (xRatio >= yRatio) {
@@ -387,7 +387,7 @@ void frame(void* userData)
     AppState& app = *static_cast<AppState*>(userData);
 
     // Begin a render pass.
-    const va::Vec2i windowSize = {sapp_width(), sapp_height()};
+    const va::Vec2i windowSize = {{sapp_width(), sapp_height()}};
 
     const sg_pass_action pass_action = {};
     sg_begin_default_pass(&pass_action, windowSize.x(), windowSize.y());
@@ -536,7 +536,7 @@ void frame(void* userData)
 
     im::Spacing();
     if (im::CollapsingHeader("Viewport", ImGuiTreeNodeFlags_DefaultOpen)) {
-        const va::Vec2i viewport {windowSize.x() - 2 * app._border.x(), windowSize.y() - 2 * app._border.y()};
+        const va::Vec2i viewport {{windowSize.x() - 2 * app._border.x(), windowSize.y() - 2 * app._border.y()}};
         im::Text("Size: %dx%d", viewport.x(), viewport.y());
         im::Spacing();
         if (im::Checkbox("Keep Aspect Ratio", &app._keepAspectRatio)) {
@@ -604,7 +604,7 @@ AppState sApp = {};
 
 } // namespace
 
-sapp_desc sokol_main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+extern "C" sapp_desc sokol_main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     return {
         .user_data = &sApp,

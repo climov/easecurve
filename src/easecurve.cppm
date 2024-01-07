@@ -22,7 +22,7 @@ public: // ctors, dtors, copy and move
 public: // setters
 
     //! Set the position of the last point. The last point is also the maximum x & y for the curve
-    void setLastPoint(const float x, const float y) { _lastPoint = {x, y}; solve(); }
+    void setLastPoint(const float x, const float y) { _lastPoint = {{x, y}}; solve(); }
 
     //! Set the "global" radius for the curve circles. This gets copied into every circle.
     void setRadius(const float radius) { _radius = radius; setRadius(); }
@@ -155,8 +155,8 @@ public: // internal (private)
 
 public: // internal (private)
     // default values
-    static constexpr Point kFirstPoint {0.f, 0.f};
-    static constexpr Point kDefaultLastPoint {10.f, 10.f};
+    static constexpr Point kFirstPoint {{0.f, 0.f}};
+    static constexpr Point kDefaultLastPoint {{10.f, 10.f}};
     static constexpr float kDefaultRadius = 1.f;
     static constexpr float kMinDistance = 0.01f;
     static constexpr float kPrecision = 0.000001f;
@@ -445,7 +445,7 @@ bool reduceRadii(EaseCurve& curve, const EaseCurve::Point& leftPoint, EaseCurve:
 
 void EaseCurve::addPoint(float x, float y, float radius)
 {
-    _points.push_back({x, y});
+    _points.push_back({{x, y}});
     _radii.push_back(radius);
     _pointsXValid.push_back(true);
     _pointsYValid.push_back(true);
@@ -454,7 +454,7 @@ void EaseCurve::addPoint(float x, float y, float radius)
 
 void EaseCurve::insertPointAt(int index, float x, float y, float radius)
 {
-    _points.insert(_points.begin() + index, {x, y});
+    _points.insert(_points.begin() + index, {{{{x, y}}}});
     _radii.insert(_radii.begin() + index, radius);
     _pointsXValid.push_back(true);
     _pointsYValid.push_back(true);
@@ -570,7 +570,7 @@ void EaseCurve::solve()
     validate(*this);
 
     const float xStretch = _xStretch;
-    auto unstretch = [xStretch](Point p) { return Point{p.x() / xStretch, p.y()}; };
+    auto unstretch = [xStretch](Point p) { return Point{{p.x() / xStretch, p.y()}}; };
 
     auto size = _points.size();
 
@@ -593,8 +593,8 @@ void EaseCurve::solve()
             _sides.clear();
             _sides.resize(size, false);
 
-            _scaledFirstCenter = {kFirstPoint.x(), kFirstPoint.y() + _firstReducedRadius};
-            _scaledLastCenter = {_lastPoint.x() / xStretch, _lastPoint.y() - _lastReducedRadius};
+            _scaledFirstCenter = {{kFirstPoint.x(), kFirstPoint.y() + _firstReducedRadius}};
+            _scaledLastCenter = {{_lastPoint.x() / xStretch, _lastPoint.y() - _lastReducedRadius}};
 
             for (decltype(size) i = 0; i < size; ++i) {
                 const Point prevPoint = unstretch((i == 0) ? kFirstPoint : _points[i - 1]);

@@ -19,17 +19,17 @@ inline void setColor(const sg_color color)
 }
 
 sgp_point cast(const va::Vec2f& point) { return {point.x(), point.y()}; }
-va::Vec2f cast(const sgp_point& point) { return {point.x, point.y}; }
+va::Vec2f cast(const sgp_point& point) { return {{point.x, point.y}}; }
 
 va::Vec2f mapToScreen(const AppState& app, const EaseCurve::Point point)
 {
-    const va::Vec2f windowSize {sapp_widthf(), sapp_heightf()};
-    const va::Vec2f border {app._border.x() * 1.f, app._border.y() * 1.f};
-    const va::Vec2f botLeft {border.x(), windowSize.y() - border.y()};
-    const va::Vec2f topRight = {windowSize.x() - border.x(), border.y()};
+    const va::Vec2f windowSize {{sapp_widthf(), sapp_heightf()}};
+    const va::Vec2f border {{app._border.x() * 1.f, app._border.y() * 1.f}};
+    const va::Vec2f botLeft {{border.x(), windowSize.y() - border.y()}};
+    const va::Vec2f topRight = {{windowSize.x() - border.x(), border.y()}};
     const va::Vec2f size = topRight - botLeft;
 
-    return botLeft + va::Vec2f{point.x() / app._curve._lastPoint.x() * size.x(), point.y() / app._curve._lastPoint.y() * size.y()};
+    return botLeft + va::Vec2f{{point.x() / app._curve._lastPoint.x() * size.x(), point.y() / app._curve._lastPoint.y() * size.y()}};
 }
 
 void drawSolidLine(const va::Vec2f& start, const va::Vec2f& end, const sg_color color)
@@ -42,10 +42,10 @@ void drawSolidLine(const va::Vec2f& start, const va::Vec2f& end, const sg_color 
 void drawDot(const va::Vec2f& point, const sg_color color)
 {
     std::array<sgp_line, 4> line;
-    line[0].a = cast(point - va::Vec2f{1.f, 0.f});
-    line[0].b = cast(point + va::Vec2f{1.f, 0.f});
-    line[1].a = cast(point - va::Vec2f{0.f, 1.f});
-    line[1].b = cast(point + va::Vec2f{0.f, 1.f});
+    line[0].a = cast(point - va::Vec2f{{1.f, 0.f}});
+    line[0].b = cast(point + va::Vec2f{{1.f, 0.f}});
+    line[1].a = cast(point - va::Vec2f{{0.f, 1.f}});
+    line[1].b = cast(point + va::Vec2f{{0.f, 1.f}});
     setColor(color);
     sgp_draw_lines(line.data(), line.size());
 }
@@ -57,9 +57,9 @@ void drawCircle(const AppState& app, const EaseCurve::Point& center, float radiu
     const trig::RadF increment = trig::Full<trig::RadF> / segments;
     trig::RadF angle = {};
     for (int i = 0; i < segments; ++i) {
-        EaseCurve::Point start = {center.x() + radius * cos(angle), center.y() + radius * sin(angle)};
+        EaseCurve::Point start = {{center.x() + radius * cos(angle), center.y() + radius * sin(angle)}};
         angle += increment;
-        EaseCurve::Point end = {center.x() + radius * cos(angle), center.y() + radius * sin(angle)};
+        EaseCurve::Point end = {{center.x() + radius * cos(angle), center.y() + radius * sin(angle)}};
         const va::Vec2f a = mapToScreen(app, start);
         const va::Vec2f b = mapToScreen(app, end);
         vertices.push_back({cast(a), cast(b)});
@@ -75,9 +75,9 @@ void drawDisc(const AppState& app, const EaseCurve::Point& center, float radius,
     const trig::RadF increment = trig::Full<trig::RadF> / segments;
     trig::RadF angle = {};
     for (int i = 0; i < segments; ++i) {
-        EaseCurve::Point start = {center.x() + radius * cos(angle), center.y() + radius * sin(angle)};
+        EaseCurve::Point start = {{center.x() + radius * cos(angle), center.y() + radius * sin(angle)}};
         angle += increment;
-        EaseCurve::Point end = {center.x() + radius * cos(angle), center.y() + radius * sin(angle)};
+        EaseCurve::Point end = {{center.x() + radius * cos(angle), center.y() + radius * sin(angle)}};
         const va::Vec2f a = mapToScreen(app, center);
         const va::Vec2f b = mapToScreen(app, start);
         const va::Vec2f c = mapToScreen(app, end);
@@ -92,7 +92,7 @@ void drawDottedLine(const va::Vec2f& start, const va::Vec2f& end, const sg_color
 {
     std::vector<sgp_line> line;
     va::Vec2f diff = end - start;
-    va::Vec2f increment {diff.x() / segments, diff.y() / segments};
+    va::Vec2f increment {{diff.x() / segments, diff.y() / segments}};
     for (int i = 0; i < segments; i += 2) {
         line.push_back({cast(start + increment * (i + 0.f)), cast(start + increment * (i + 1.f))});
     }
@@ -122,9 +122,9 @@ void drawDottedCircle(const AppState& app, const EaseCurve::Point& center, float
     //float angle = 0.f;
     trig::RadF angle = {};
     for (int i = 0; i < segments; i += 2) {
-        EaseCurve::Point start = {center.x() + radius * cos(angle), center.y() + radius * sin(angle)};
+        EaseCurve::Point start = {{center.x() + radius * cos(angle), center.y() + radius * sin(angle)}};
         angle += increment;
-        EaseCurve::Point end = {center.x() + radius * cos(angle), center.y() + radius * sin(angle)};
+        EaseCurve::Point end = {{center.x() + radius * cos(angle), center.y() + radius * sin(angle)}};
         angle += increment;
         const va::Vec2f a = mapToScreen(app, start);
         const va::Vec2f b = mapToScreen(app, end);
@@ -140,9 +140,9 @@ void drawDottedEllipse(const AppState& app, const EaseCurve::Point& center, floa
     const trig::RadF increment = trig::Full<trig::RadF> / segments;
     trig::RadF angle = {};
     for (int i = 0; i < segments; i += 2) {
-        EaseCurve::Point start = {center.x() + radius * cos(angle) * xStretch, center.y() + radius * sin(angle)};
+        EaseCurve::Point start = {{center.x() + radius * cos(angle) * xStretch, center.y() + radius * sin(angle)}};
         angle += increment;
-        EaseCurve::Point end = {center.x() + radius * cos(angle) * xStretch, center.y() + radius * sin(angle)};
+        EaseCurve::Point end = {{center.x() + radius * cos(angle) * xStretch, center.y() + radius * sin(angle)}};
         angle += increment;
         const va::Vec2f a = mapToScreen(app, start);
         const va::Vec2f b = mapToScreen(app, end);
@@ -154,15 +154,15 @@ void drawDottedEllipse(const AppState& app, const EaseCurve::Point& center, floa
 
 void drawCoordinates(const AppState& app)
 {
-    const va::Vec2f windowSize {sapp_widthf(), sapp_heightf()};
-    const va::Vec2f border {app._border.x() * 1.f, app._border.y() * 1.f};
-    const va::Vec2f botLeft {border.x(), windowSize.y() - border.y()};
+    const va::Vec2f windowSize {{sapp_widthf(), sapp_heightf()}};
+    const va::Vec2f border {{app._border.x() * 1.f, app._border.y() * 1.f}};
+    const va::Vec2f botLeft {{border.x(), windowSize.y() - border.y()}};
     //const va::Vec2f topRight = {windowSize.x() - border.x(), border.y()};
 
     // horiz axis
-    drawSolidArrow({0.f, botLeft.y()}, {windowSize.x() * 1.f, 0.f}, app._axisColor);
+    drawSolidArrow({{0.f, botLeft.y()}}, {{windowSize.x() * 1.f, 0.f}}, app._axisColor);
     // vert axis
-    drawSolidArrow({botLeft.x(), windowSize.y() * 1.f}, {0.f, windowSize.y() * -1.f}, app._axisColor);
+    drawSolidArrow({{botLeft.x(), windowSize.y() * 1.f}}, {{0.f, windowSize.y() * -1.f}}, app._axisColor);
 
     if (app._showGuides) {
         // segments
@@ -173,9 +173,9 @@ void drawCoordinates(const AppState& app)
             const sg_color vcolor = (segment.finalX >= segment.initialX) ? app._guideColor : app._errorColor;
             const sg_color hcolor = (finalY >= initalY) ? app._guideColor : app._errorColor;
             // horiz
-            drawDottedLine(mapToScreen(app, {0.f, finalY}), mapToScreen(app, {segment.finalX * xStretch, finalY}), hcolor);
+            drawDottedLine(mapToScreen(app, {{0.f, finalY}}), mapToScreen(app, {{segment.finalX * xStretch, finalY}}), hcolor);
             // vert
-            drawDottedLine(mapToScreen(app, {segment.finalX * xStretch, 0}), mapToScreen(app, {segment.finalX * xStretch, finalY}), vcolor);
+            drawDottedLine(mapToScreen(app, {{segment.finalX * xStretch, 0}}), mapToScreen(app, {{segment.finalX * xStretch, finalY}}), vcolor);
         }
     }
 }
@@ -189,7 +189,7 @@ void drawCurve(const AppState& app)
     for (int i = 1; i <= linesPerSegment; ++i) {
         const float x = i * xIncrement;
         const float y = app._curve.evaluate(x);
-        drawSolidLine(mapToScreen(app, {prevX, prevY}), mapToScreen(app, {x, y}), app._curveColor);
+        drawSolidLine(mapToScreen(app, {{prevX, prevY}}), mapToScreen(app, {{x, y}}), app._curveColor);
         prevX = x;
         prevY = y;
     }
@@ -207,7 +207,7 @@ void drawSpeed(const AppState& app)
     for (int i = 1; i <= linesPerSegment; ++i) {
         const float x = i * xIncrement;
         const float y = app._curve.speed(x);
-        drawSolidLine(mapToScreen(app, {prevX, prevY}), mapToScreen(app, {x, y}), app._speedColor);
+        drawSolidLine(mapToScreen(app, {{prevX, prevY}}), mapToScreen(app, {{x, y}}), app._speedColor);
         prevX = x;
         prevY = y;
     }
@@ -225,7 +225,7 @@ void drawAccel(const AppState& app)
     for (int i = 1; i <= linesPerSegment; ++i) {
         const float x = i * xIncrement;
         const float y = app._curve.accel(x);
-        drawSolidLine(mapToScreen(app, {prevX, prevY}), mapToScreen(app, {x, y}), app._accelColor);
+        drawSolidLine(mapToScreen(app, {{prevX, prevY}}), mapToScreen(app, {{x, y}}), app._accelColor);
         prevX = x;
         prevY = y;
     }
@@ -240,50 +240,50 @@ void drawCircles(const AppState& app)
     const float xStretch = app._curve._xStretch;
     // first circle
     {
-        const va::Vec2f center = mapToScreen(app, {app._curve._scaledFirstCenter.x() * xStretch, app._curve._scaledFirstCenter.y()});
+        const va::Vec2f center = mapToScreen(app, {{app._curve._scaledFirstCenter.x() * xStretch, app._curve._scaledFirstCenter.y()}});
 
         // radius
         drawDottedLine(center, mapToScreen(app, EaseCurve::kFirstPoint), app._curveColor, 21);
         //drawSolidLine(center, mapToScreen(app, EaseCurve::kStartPoint), app._curveColor);
 
         // center
-        drawDisc(app, {app._curve._scaledFirstCenter.x() * xStretch, app._curve._scaledFirstCenter.y()}, .05f, app._curveColor);
+        drawDisc(app, {{app._curve._scaledFirstCenter.x() * xStretch, app._curve._scaledFirstCenter.y()}}, .05f, app._curveColor);
         //drawDot(center, app._curveColor);
 
         // circle
-        drawDottedEllipse(app, {app._curve._scaledFirstCenter.x() * xStretch, app._curve._scaledFirstCenter.y()}, app._curve._firstRadius, xStretch, app._curveColor);
+        drawDottedEllipse(app, {{app._curve._scaledFirstCenter.x() * xStretch, app._curve._scaledFirstCenter.y()}}, app._curve._firstRadius, xStretch, app._curveColor);
     }
 
     // last circle
     {
-        const va::Vec2f center = mapToScreen(app, {app._curve._scaledLastCenter.x() * xStretch, app._curve._scaledLastCenter.y()});
+        const va::Vec2f center = mapToScreen(app, {{app._curve._scaledLastCenter.x() * xStretch, app._curve._scaledLastCenter.y()}});
 
         // radius
         drawDottedLine(center, mapToScreen(app, app._curve._lastPoint), app._curveColor, 21);
         //drawSolidLine(app._window, center, mapToScreen(app, app._curve._lastPoint), app._curveColor);
 
         // center
-        drawDisc(app, {app._curve._scaledLastCenter.x() * xStretch, app._curve._scaledLastCenter.y()}, .05f, app._curveColor);
+        drawDisc(app, {{app._curve._scaledLastCenter.x() * xStretch, app._curve._scaledLastCenter.y()}}, .05f, app._curveColor);
         //drawDot(center, app._curveColor);
 
         // circle
-        drawDottedEllipse(app, {app._curve._scaledLastCenter.x() * xStretch, app._curve._scaledLastCenter.y()}, app._curve._lastRadius, xStretch, app._curveColor);
+        drawDottedEllipse(app, {{app._curve._scaledLastCenter.x() * xStretch, app._curve._scaledLastCenter.y()}}, app._curve._lastRadius, xStretch, app._curveColor);
     }
 
     // intermediate circles
     const auto count = app._curve._points.size();
     for (size_t i = 0; i < count; ++i) {
-        const va::Vec2f center = mapToScreen(app, {app._curve._scaledCenters[i].x() * xStretch, app._curve._scaledCenters[i].y()});
+        const va::Vec2f center = mapToScreen(app, {{app._curve._scaledCenters[i].x() * xStretch, app._curve._scaledCenters[i].y()}});
 
         // radius
         drawDottedLine(center, mapToScreen(app, app._curve._points[i]), app._curveColor, 21);
         //drawDisc(app._window, center, 2.f, app._curveColor);
 
         // center
-        drawDisc(app, {app._curve._scaledCenters[i].x() * xStretch, app._curve._scaledCenters[i].y()}, .05f, app._curve._sides[i] == app._curve._originalSides[i] ? app._curveColor : app._errorColor);
+        drawDisc(app, {{app._curve._scaledCenters[i].x() * xStretch, app._curve._scaledCenters[i].y()}}, .05f, app._curve._sides[i] == app._curve._originalSides[i] ? app._curveColor : app._errorColor);
 
         // circle
-        drawDottedEllipse(app, {app._curve._scaledCenters[i].x() * xStretch, app._curve._scaledCenters[i].y()}, app._curve._radii[i], xStretch, app._curveColor);
+        drawDottedEllipse(app, {{app._curve._scaledCenters[i].x() * xStretch, app._curve._scaledCenters[i].y()}}, app._curve._radii[i], xStretch, app._curveColor);
     }
 }
 
@@ -313,21 +313,21 @@ void drawMouseCursor(const AppState& app)
     std::array<sgp_line, 4> whiteLines;
     std::array<sgp_line, 2> blackLines;
     // 2 horizontal white lines
-    whiteLines[0].a = cast(pos + va::Vec2f{-3.f, -1.f});
-    whiteLines[0].b = cast(pos + va::Vec2f{+3.f, -1.f});
-    whiteLines[1].a = cast(pos + va::Vec2f{-3.f, +1.f});
-    whiteLines[1].b = cast(pos + va::Vec2f{+3.f, +1.f});
+    whiteLines[0].a = cast(pos + va::Vec2f{{-3.f, -1.f}});
+    whiteLines[0].b = cast(pos + va::Vec2f{{+3.f, -1.f}});
+    whiteLines[1].a = cast(pos + va::Vec2f{{-3.f, +1.f}});
+    whiteLines[1].b = cast(pos + va::Vec2f{{+3.f, +1.f}});
     // 2 vertical white lines
-    whiteLines[2].a = cast(pos + va::Vec2f{-1.f, -3.f});
-    whiteLines[2].b = cast(pos + va::Vec2f{-1.f, +3.f});
-    whiteLines[3].a = cast(pos + va::Vec2f{+1.f, -3.f});
-    whiteLines[3].b = cast(pos + va::Vec2f{+1.f, +3.f});
+    whiteLines[2].a = cast(pos + va::Vec2f{{-1.f, -3.f}});
+    whiteLines[2].b = cast(pos + va::Vec2f{{-1.f, +3.f}});
+    whiteLines[3].a = cast(pos + va::Vec2f{{+1.f, -3.f}});
+    whiteLines[3].b = cast(pos + va::Vec2f{{+1.f, +3.f}});
     // 1 horizontal black line
-    blackLines[0].a = cast(pos + va::Vec2f{-3.f, +0.f});
-    blackLines[0].b = cast(pos + va::Vec2f{+3.f, +0.f});
+    blackLines[0].a = cast(pos + va::Vec2f{{-3.f, +0.f}});
+    blackLines[0].b = cast(pos + va::Vec2f{{+3.f, +0.f}});
     // 1 vertical black line
-    blackLines[1].a = cast(pos + va::Vec2f{+0.f, -3.f});
-    blackLines[1].b = cast(pos + va::Vec2f{+0.f, +3.f});
+    blackLines[1].a = cast(pos + va::Vec2f{{+0.f, -3.f}});
+    blackLines[1].b = cast(pos + va::Vec2f{{+0.f, +3.f}});
     setColor(sg_color {1.f, 1.f, 1.f, 1.f}); // white
     sgp_draw_lines(whiteLines.data(), whiteLines.size());
     setColor(sg_color {0.f, 0.f, 0.f, 1.f}); // black

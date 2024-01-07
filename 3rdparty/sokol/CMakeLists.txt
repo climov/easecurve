@@ -47,6 +47,8 @@ target_sources(sokol PUBLIC FILE_SET CXX_MODULES FILES
 )
 if (APPLE)
     target_compile_options(sokol PUBLIC -fsized-deallocation)
+elseif (WIN32)
+    target_compile_options(sokol PUBLIC -utf-8)
 endif ()
 target_include_directories(sokol SYSTEM PUBLIC ${SOKOL_PATH} ${SOKOL_GP_PATH})
 target_link_libraries(sokol PUBLIC imgui)

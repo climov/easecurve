@@ -40,6 +40,7 @@ export {
     using ::ImGuiKey;
     using ::ImGuiMouseSource;
     using ::ImGuiCol;
+    using ::ImGuiCol_Text;
     using ::ImGuiCond;
     using ::ImGuiDataType;
     using ::ImGuiDir;
@@ -71,6 +72,7 @@ export {
     using ::ImGuiTableColumnFlags;
     using ::ImGuiTableRowFlags;
     using ::ImGuiTreeNodeFlags;
+    using ::ImGuiTreeNodeFlags_DefaultOpen;
     using ::ImGuiViewportFlags;
     using ::ImGuiWindowFlags;
 

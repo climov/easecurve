@@ -9,7 +9,7 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET 10.13)
 
 add_subdirectory(3rdparty)
 
-if(WIN32)
+if (WIN32)
     set(SRC_COMPILE_FLAGS
         -Wall -WX
         -experimental:external -external:W0 -external:anglebrackets
@@ -22,8 +22,12 @@ if(WIN32)
         -wd4710 -wd4711
         -wd4738
         -wd4582 -wd4365
+        -wd4623
+        -wd5219
+        -wd4267
+        -wd4686
     )
-else()
+else ()
     set(SRC_COMPILE_FLAGS
         -fsized-deallocation
         -Wall -Wextra -Weverything -Werror
@@ -37,7 +41,7 @@ else()
         -Wno-implicit-int-float-conversion
         -Wno-missing-prototypes
     )
-endif()
+endif ()
 
 add_executable(easecurve)
 target_sources(easecurve PRIVATE main.cpp src/render.cpp)
@@ -46,12 +50,11 @@ target_compile_options(easecurve PRIVATE ${SRC_COMPILE_FLAGS})
 target_include_directories(easecurve PRIVATE "src")
 target_link_libraries(easecurve PRIVATE alx sokol)
 
-if(WIN32)
-    #find_package(OpenGL REQUIRED)
-    #target_link_libraries(easecurve PRIVATE sfml-graphics-d sfml-window-d sfml-system-d sfml-audio-d ${OPENGL_LIBRARIES})
-elseif(APPLE)
+if (WIN32)
+    target_link_options(easecurve PRIVATE -subsystem:WINDOWS)
+elseif (APPLE)
     target_link_libraries(easecurve PRIVATE "-framework Cocoa" "-framework QuartzCore" "-framework Metal" "-framework MetalKit")
-elseif(EMSCRIPTEN)
+elseif (EMSCRIPTEN)
     target_link_options(easecurve PRIVATE -s USE_WEBGL2=1)
     add_custom_command(OUTPUT easecurve.html DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/easecurve.html COMMENT "Copying html" COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/easecurve.html" "easecurve.html")
     add_custom_target(html ALL DEPENDS easecurve.html)

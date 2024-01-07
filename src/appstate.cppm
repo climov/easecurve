@@ -35,7 +35,7 @@ export struct AppState
     sg_color                _accelColor = sg_cyan;
     sg_color                _errorColor = sg_red;
 
-    alx::va::Vec2i          _border { 50, 50 };
+    alx::va::Vec2i          _border {{{ 50, 50 }}};
     int                     _selectedCurve = -1;
     bool                    _showCircles = true;
     bool                    _showSpeed = true;
