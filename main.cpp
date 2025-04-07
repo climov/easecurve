@@ -374,11 +374,6 @@ void event(const sapp_event* ev, void* userData)
 {
     AppState& app = *static_cast<AppState*>(userData);
 
-    if (simgui_handle_event(ev)) {
-        return;
-    }
-    //fmt::print("{}\n", ev->type);
-    //std::cout.flush();
     switch (ev->type) {
     case SAPP_EVENTTYPE_QUIT_REQUESTED:
         sapp_quit();
@@ -396,6 +391,17 @@ void event(const sapp_event* ev, void* userData)
             break;
         }
         break;
+    default:
+        break;
+    }
+
+    if (simgui_handle_event(ev)) {
+        return;
+    }
+    //fmt::print("{}\n", ev->type);
+    //std::cout.flush();
+
+    switch (ev->type) {
     case SAPP_EVENTTYPE_MOUSE_MOVE:
         app._mouse.x() = ev->mouse_x;
         app._mouse.y() = ev->mouse_y;
@@ -407,6 +413,7 @@ void event(const sapp_event* ev, void* userData)
 
 void frame(void* userData)
 {
+    //const auto now = std::chrono::high_resolution_clock::now();
     AppState& app = *static_cast<AppState*>(userData);
 
     // Begin a render pass.
@@ -425,7 +432,7 @@ void frame(void* userData)
 
     im::Begin("Info");
 
-    //im::Text("%d fps", fps);
+    im::Text("%d fps", static_cast<int>(1./sapp_frame_duration()));
     im::Spacing();
     //const float maxRadius = std::min(app._curve._lastPoint.x, app._curve._lastPoint.y);
     //constexpr float maxRadius = 100.f;
@@ -598,14 +605,6 @@ void frame(void* userData)
 
         render(app);
 
-        // Draw an animated rectangle that rotates and changes its colors.
-        //const float time = static_cast<float>(sapp_frame_count()) * static_cast<float>(sapp_frame_duration());
-        //const float r = sinf(time)*0.5f+0.5f;
-        //const float g = cosf(time)*0.5f+0.5f;
-        //sgp_set_color(1.0f, 1.0f, 0.3f, 1.0f);
-        //sgp_rotate_at(time, 0.0f, 0.0f);
-        //sgp_draw_filled_rect(-0.5f, -0.5f, 1.0f, 1.0f);
-
         // Dispatch all draw commands to Sokol GFX.
         sgp_flush();
         // Finish a draw command queue, clearing it.
@@ -620,7 +619,7 @@ void frame(void* userData)
     sg_end_pass();
     // Commit Sokol render.
     sg_commit();
-
+    //std::println("Frame took: {}", std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - now));
 }
 
 AppState sApp = {};
@@ -644,8 +643,9 @@ extern "C" sapp_desc sokol_main([[maybe_unused]] int argc, [[maybe_unused]] char
         .width = 0,
         .height = 0,
         .sample_count = 4, // enable anti-aliasing
-        .fullscreen = true,
+        //.swap_interval = 20,
+        .fullscreen = false,
         .window_title = "Ease Curve",
-        .icon = { .sokol_default = true }
+        .icon = { .sokol_default = true },
     };
 }

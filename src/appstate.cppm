@@ -12,6 +12,7 @@ import sokol.color;
 
 import alx.assert;
 import alx.va;
+import alx.trig;
 
 using namespace sokol::color;
 
@@ -286,51 +287,97 @@ export void solve(Path& path)
     std::println("Calculation took: {} in {} iterations, with final error of: {}", end-start, i, prevError);
 }
 
+namespace {
+[[maybe_unused]]
+float easeInOutCubic(const float t)
+{
+    if (t < 0.5f) {
+        return 4.f * t * t * t;
+    }
+    const float v = -2.f * t + 2.f;
+    return 1.f - (v * v * v) / 2.f;
+}
+
+[[maybe_unused]]
+float easeInOutQuadratic(const float t)
+{
+    if (t < 0.5f) {
+        return 2.f * t * t;
+    }
+    const float v = -2.f * t + 2;
+    return 1 - v * v / 2.f;
+}
+
+[[maybe_unused]]
+float easeInOutCircle(const float t)
+{
+    return t < 0.5f ? (1.f - std::sqrt(1 - std::pow(2.f * t, 2.f))) / 2.f : (std::sqrt(1.f - std::pow(-2.f * t + 2.f, 2.f)) + 1.f) / 2.f;
+}
+
+[[maybe_unused]]
+float easeInOutSine(const float t) {
+    return 0.5f * (1.f + std::sin(alx::trig::pi_v<float> * (t - 0.5f)));
+}
+
+float easeInOut(const float t, const float factor)
+{
+    const float absFactor = std::abs(factor);
+    //const float delta = (factor - 1.f) * (factor + .5f) * (factor + 1.f) / -1.5f;
+    const float delta = (factor > 0.f && factor < 1.f) ? absFactor : 0.f;
+    return easeInOutSine(delta + t * absFactor);
+}
+
+} // namespace
+
 float velocityAt(const Path& path, const float time)
 {
     if (time <= path.startTime) {
         return path.startVelocity;
     }
-    float prevStartTime     = path.startTime;
-    float prevEaseDuration  = path.adjustedStartEaseDuration;
-    float prevVelocity      = path.startVelocity;
+    float prevStartTime             = path.startTime;
+    float prevEaseDuration          = path.adjustedStartEaseDuration;
+    float prevEaseDurationFactor    = 1.f;
+    float prevVelocity              = path.startVelocity;
 
     if (!path.checkpoints.empty()) {
         for (size_t k = 0; k < path.checkpoints.size(); ++k) {
-            const float curTime         = path.checkpoints[k].time;
-            const float curEaseDuration = path.checkpoints[k].adjustedEaseDuration / 2;
-            const float curVelocity     = path.velocities[k];
-            const float nextVelocity    = path.velocities[k+1];
+            const float curTime                 = path.checkpoints[k].time;
+            const float curEaseDuration         = path.checkpoints[k].adjustedEaseDuration / 2;
+            const float curEaseDurationFactor   = .5f;
+            const float curVelocity             = path.velocities[k];
+            const float nextVelocity            = path.velocities[k+1];
 
-            if (time < prevStartTime + prevEaseDuration) {
-                return std::lerp(prevVelocity, curVelocity, (time - prevStartTime) / prevEaseDuration);
+            if (time < prevStartTime + prevEaseDuration * prevEaseDurationFactor) {
+                return std::lerp(prevVelocity, curVelocity, easeInOut((time - prevStartTime) / (prevEaseDuration * prevEaseDurationFactor), prevEaseDurationFactor));
             }
-            if (time < curTime - curEaseDuration) {
+            if (time < curTime - curEaseDuration * curEaseDurationFactor) {
                 return curVelocity;
             }
             if (time < curTime) {
-                return std::lerp(curVelocity, (curVelocity + nextVelocity) / 2, (time - curTime + curEaseDuration) / curEaseDuration);
+                return std::lerp(curVelocity, (curVelocity + nextVelocity) / 2, easeInOut((time - curTime + curEaseDuration * curEaseDurationFactor) / (curEaseDuration * curEaseDurationFactor), -curEaseDurationFactor));
             }
-            prevStartTime = curTime;
-            prevEaseDuration = curEaseDuration;
-            prevVelocity = (curVelocity + nextVelocity) / 2;
+            prevStartTime           = curTime;
+            prevEaseDuration        = curEaseDuration;
+            prevEaseDurationFactor  = curEaseDurationFactor;
+            prevVelocity            = (curVelocity + nextVelocity) / 2;
         }
     }
     {
-        const size_t k              = path.checkpoints.size();
-        const float curTime         = path.endTime;
-        const float curEaseDuration = path.adjustedEndEaseDuration;
-        const float curVelocity     = path.velocities[k];
-        const float nextVelocity    = path.endVelocity;
+        const size_t k                      = path.checkpoints.size();
+        const float curTime                 = path.endTime;
+        const float curEaseDuration         = path.adjustedEndEaseDuration;
+        const float curEaseDurationFactor   = 1.f;
+        const float curVelocity             = path.velocities[k];
+        const float nextVelocity            = path.endVelocity;
 
-        if (time < prevStartTime + prevEaseDuration) {
-            return std::lerp(prevVelocity, curVelocity, (time - prevStartTime) / prevEaseDuration);
+        if (time < prevStartTime + prevEaseDuration * prevEaseDurationFactor) {
+            return std::lerp(prevVelocity, curVelocity, easeInOut((time - prevStartTime) / (prevEaseDuration * prevEaseDurationFactor), prevEaseDurationFactor));
         }
         if (time < curTime - curEaseDuration) {
             return curVelocity;
         }
         if (time < curTime) {
-            return std::lerp(curVelocity, nextVelocity, (time - curTime + curEaseDuration) / curEaseDuration);
+            return std::lerp(curVelocity, nextVelocity, easeInOut((time - curTime + curEaseDuration * curEaseDurationFactor) / (curEaseDuration * curEaseDurationFactor), -curEaseDurationFactor));
         }
     }
 

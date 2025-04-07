@@ -201,7 +201,7 @@ void drawCoordinates(const AppState& app)
 
 void drawCurve(const AppState& app)
 {
-    constexpr int linesPerSegment = 10000;
+    constexpr int linesPerSegment = 1000;
     const float xIncrement = app._path.endTime / linesPerSegment;
     const float xStep = xIncrement / 100;
     float prevX = app._path.startTime;
@@ -218,7 +218,7 @@ void drawCurve(const AppState& app)
 void drawSpeed(const AppState& app)
 {
     ///velocityAt(app._path, 10);
-    constexpr int linesPerSegment = 10000;
+    constexpr int linesPerSegment = 1000;
     if (!app._showSpeed) {
         return;
     }
@@ -236,7 +236,7 @@ void drawSpeed(const AppState& app)
 
 void drawAccel(const AppState& app)
 {
-    constexpr int linesPerSegment = 10000;
+    constexpr int linesPerSegment = 1000;
     if (!app._showAccel) {
         return;
     }
