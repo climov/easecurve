@@ -319,12 +319,17 @@ float easeInOutSine(const float t) {
     return 0.5f * (1.f + std::sin(alx::trig::pi_v<float> * (t - 0.5f)));
 }
 
-float easeInOut(const float t, const float factor)
+[[maybe_unused]]
+float easeInOutLinear(const float t)
+{
+    return t;
+}
+
+float easeInOut(const float t, [[maybe_unused]] const float factor)
 {
     const float absFactor = std::abs(factor);
-    //const float delta = (factor - 1.f) * (factor + .5f) * (factor + 1.f) / -1.5f;
-    const float delta = (factor > 0.f && factor < 1.f) ? absFactor : 0.f;
-    return easeInOutSine(delta + t * absFactor);
+    const float delta = (factor > 0.f && factor < 1.f) ? 0.5f : 0.f;
+    return (easeInOutSine(t * absFactor + delta) - delta) / absFactor;
 }
 
 } // namespace
@@ -342,7 +347,7 @@ float velocityAt(const Path& path, const float time)
     if (!path.checkpoints.empty()) {
         for (size_t k = 0; k < path.checkpoints.size(); ++k) {
             const float curTime                 = path.checkpoints[k].time;
-            const float curEaseDuration         = path.checkpoints[k].adjustedEaseDuration / 2;
+            const float curEaseDuration         = path.checkpoints[k].adjustedEaseDuration;
             const float curEaseDurationFactor   = .5f;
             const float curVelocity             = path.velocities[k];
             const float nextVelocity            = path.velocities[k+1];

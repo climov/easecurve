@@ -217,7 +217,6 @@ void drawCurve(const AppState& app)
 
 void drawSpeed(const AppState& app)
 {
-    ///velocityAt(app._path, 10);
     constexpr int linesPerSegment = 1000;
     if (!app._showSpeed) {
         return;
