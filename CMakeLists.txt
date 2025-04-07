@@ -6,6 +6,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.13)
+set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
 add_subdirectory(3rdparty)
 
@@ -40,6 +41,8 @@ else ()
         -Wno-switch-enum
         -Wno-implicit-int-float-conversion
         -Wno-missing-prototypes
+        -Wno-switch-default
+        -Wno-missing-designated-field-initializers
     )
 endif ()
 

@@ -1,9 +1,17 @@
 
+#include <imgui.h>
+
+#include "alx/rassert.h"
+
 import std;
-import alx.va;
-import main.appstate;
+
 import sokol;
 import imgui;
+
+import alx.assert;
+import alx.va;
+
+import main.appstate;
 
 namespace im = ImGui;
 namespace va = alx::va;
@@ -13,7 +21,7 @@ namespace {
 void fixAspectRatioByX(AppState& app)
 {
     if (app._keepAspectRatio) {
-        const float ratio = app._curve._lastPoint.y() / app._curve._lastPoint.x();
+        const float ratio = app._path.endProgress / app._path.endTime;
         const va::Vec2i windowSize = {{sapp_width(), sapp_height()}};
         const int width = windowSize.x() - 2 * app._border.x();
         const int height = static_cast<int>(static_cast<float>(width) * ratio);
@@ -29,7 +37,7 @@ void fixAspectRatioByX(AppState& app)
 void fixAspectRatioByY(AppState& app)
 {
     if (app._keepAspectRatio) {
-        const float ratio = app._curve._lastPoint.x() / app._curve._lastPoint.y();
+        const float ratio = app._path.endTime / app._path.endProgress;
         const va::Vec2i windowSize = {{sapp_width(), sapp_height()}};
         const int height = windowSize.y() - 2 * app._border.y();
         const int width = static_cast<int>(static_cast<float>(height) * ratio);
@@ -46,8 +54,8 @@ void fixAspectRatio(AppState& app)
 {
     if (app._keepAspectRatio) {
         const va::Vec2i windowSize = {{sapp_width(), sapp_height()}};
-        const float xRatio = static_cast<float>(windowSize.x()) / app._curve._lastPoint.x();
-        const float yRatio = static_cast<float>(windowSize.y()) / app._curve._lastPoint.y();
+        const float xRatio = static_cast<float>(windowSize.x()) / app._path.endTime;
+        const float yRatio = static_cast<float>(windowSize.y()) / app._path.endProgress;
         if (xRatio >= yRatio) {
             fixAspectRatioByX(app);
         } else {
@@ -72,11 +80,28 @@ void init(AppState& app)
     //im::SFML::UpdateFontTexture();
 
     ////fdbg("Texture max size: {}", sf::Texture::getMaximumSize());
-    app._curve.setLastPoint(10.f, 20.f);
-    app._curve.setRadius(1.f);
+    //app._curve.setLastPoint(10.f, 20.f);
+   // app._curve.setRadius(1.f);
     //app._curve.addPoint(0.2f, 0.3f);
     //app._curve.addPoint(0.6f, 0.4f);
     //app._curve.addPoint(0.8f, 0.6f);
+
+    app._path = {
+        .startTime          = 0,
+        .startProgress      = 0,
+        .startVelocity      = 0,
+        .startEaseDuration  = 5,
+        .endTime            = 100,
+        .endProgress        = 100,
+        .endVelocity        = 0,
+        .endEaseDuration    = 5,
+        .checkpoints        = {
+            { .time = 25,   .progress = 20.f,  .easeDuration= 5    },
+            { .time = 40,   .progress = 50.f,  .easeDuration= 5    },
+            { .time = 55,   .progress = 70.f,  .easeDuration= 5    },
+        },
+    };
+    solve(app._path);
 
     fixAspectRatio(app);
 }
@@ -366,8 +391,8 @@ void event(const sapp_event* ev, void* userData)
             sapp_quit();
             break;
         case SAPP_KEYCODE_C:
-            app._curve = {};
-            app._curve.solve();
+            //app._curve = {};
+            //app._curve.solve();
             break;
         default:
             break;
@@ -405,118 +430,118 @@ void frame(void* userData)
     //im::Text("%d fps", fps);
     im::Spacing();
     //const float maxRadius = std::min(app._curve._lastPoint.x, app._curve._lastPoint.y);
-    constexpr float maxRadius = 100.f;
+    //constexpr float maxRadius = 100.f;
     if (im::CollapsingHeader("Curve", ImGuiTreeNodeFlags_DefaultOpen)) {
-        if (app._curve._valid) {
-            im::TextUnformatted("Curve is valid");
-        } else {
-            im::PushStyleColor(ImGuiCol_Text, {1.f, 0.f, 0.f, 1.f});
-            im::TextUnformatted("Curve is invalid");
-            im::PopStyleColor();
-        }
+        //if (app._curve._valid) {
+        //    im::TextUnformatted("Curve is valid");
+        //} else {
+        //    im::PushStyleColor(ImGuiCol_Text, {1.f, 0.f, 0.f, 1.f});
+        //    im::TextUnformatted("Curve is invalid");
+        //    im::PopStyleColor();
+        //}
 
         im::Spacing();
-        if (im::SliderFloat("Min. Distance", &app._curve._minDistance, 0.f, maxRadius)) {
-            app._curve.solve();
-        }
-        if (im::SliderFloat("Precision", &app._curve._precision, 0.f, 1.f, "%.6f")) {
-            app._curve.solve();
-        }
-        if (im::SliderFloat("X Stretch Factor", &app._curve._xStretch, 0.1f, 10.f)) {
-            app._curve.solve();
-        }
+        //if (im::SliderFloat("Min. Distance", &app._curve._minDistance, 0.f, maxRadius)) {
+        //    app._curve.solve();
+        //}
+        //if (im::SliderFloat("Precision", &app._curve._precision, 0.f, 1.f, "%.6f")) {
+        //    app._curve.solve();
+        //}
+        //if (im::SliderFloat("X Stretch Factor", &app._curve._xStretch, 0.1f, 10.f)) {
+        //    app._curve.solve();
+        //}
+        //im::Separator();
+        //if (im::SliderFloat("Radius", &app._curve._radius, 0.f, maxRadius)) {
+        //    app._curve.setRadius();
+        //}
+        //im::Separator();
+        //if (im::SliderFloat("First Radius", &app._curve._firstRadius, 0.f, maxRadius)) {
+        //    app._curve.solve();
+        //}
+        //if (im::SliderFloat("Last Radius", &app._curve._lastRadius, 0.f, maxRadius)) {
+        //    app._curve.solve();
+        //}
         im::Separator();
-        if (im::SliderFloat("Radius", &app._curve._radius, 0.f, maxRadius)) {
-            app._curve.setRadius();
-        }
-        im::Separator();
-        if (im::SliderFloat("First Radius", &app._curve._firstRadius, 0.f, maxRadius)) {
-            app._curve.solve();
-        }
-        if (im::SliderFloat("Last Radius", &app._curve._lastRadius, 0.f, maxRadius)) {
-            app._curve.solve();
-        }
-        im::Separator();
-        if (im::SliderFloat("Last Point X", &app._curve._lastPoint.x(), 0.f, 100.f)) {
+        if (im::SliderFloat("End Time", &app._path.endTime, 0.f, 100.f)) {
             fixAspectRatioByY(app);
-            app._curve.solve();
+            solve(app._path);
         }
-        if (im::SliderFloat("Last Point Y", &app._curve._lastPoint.y(), 0.f, 100.f)) {
+        if (im::SliderFloat("End Progress", &app._path.endProgress, 0.f, 100.f)) {
             fixAspectRatioByX(app);
-            app._curve.solve();
+            solve(app._path);
         }
-        im::Separator();
-        if (im::Checkbox("Autoflip", &app._curve._autoFlip)) {
-            app._curve.solve();
-        }
-        if (im::Checkbox("Reduce Radii", &app._curve._reduceRadii)) {
-            app._curve.solve();
-        }
-        im::Text("Iterations: %d", app._curve._iterations);
-        im::Text("Time: %lld us", app._curve._solveTimeUs);
+        //im::Separator();
+        //if (im::Checkbox("Autoflip", &app._curve._autoFlip)) {
+        //    app._curve.solve();
+        //}
+        //if (im::Checkbox("Reduce Radii", &app._curve._reduceRadii)) {
+        //    app._curve.solve();
+        //}
+        //im::Text("Iterations: %d", app._curve._iterations);
+        //im::Text("Time: %lld us", app._curve._solveTimeUs);
     }
 
     im::Spacing();
     if (im::CollapsingHeader("Intermediate points", ImGuiTreeNodeFlags_DefaultOpen)) {
-        if (app._curve._points.empty()) {
-            if (im::Button("Add Intermediate Point")) {
-                app._curve.addPoint(app._curve._lastPoint.x() / 2, app._curve._lastPoint.y() / 2);
-            }
-        } else {
-            auto count = app._curve._points.size();
-            float min_x = 0.f;
-            float max_x = 1.f;
-            float min_y = 0.f;
-            float max_y = 1.f;
-            im::PushID("points");
-            im::Spacing();
-            for (decltype(count) i = 0; i < count; ++i) {
-                im::PushID(static_cast<int>(i));
-                if (i < count - 1) {
-                    max_x = app._curve._points[i+1].x();
-                    max_y = app._curve._points[i+1].y();
-                } else {
-                    max_x = app._curve._lastPoint.x();
-                    max_y = app._curve._lastPoint.y();
-                }
-                if (im::Button("+")) {
-                    app._curve.insertPointAt(static_cast<int>(i), (app._curve._points[i].x() + min_x) / 2, (app._curve._points[i].y() + min_y) / 2);
-                }
-                im::Spacing();
-                if (im::Button("-")) {
-                    app._curve.removePointAt(static_cast<int>(i));
-                }
-                im::SameLine();
-                if (im::SliderFloat("x", &app._curve._points[i].x(), min_x, max_x)) {
-                    app._curve.solve();
-                }
-                im::Indent();
-                if (im::SliderFloat("y", &app._curve._points[i].y(), min_y, max_y)) {
-                    app._curve.solve();
-                }
-                if (im::SliderFloat("r", &app._curve._radii[i], 0.f, maxRadius)) {
-                    app._curve.solve();
-                }
-                im::Unindent();
-                min_x = app._curve._points[i].x();
-                min_y = app._curve._points[i].y();
-                im::PopID();
-                im::Spacing();
-            }
-            {
-                im::PushID(static_cast<int>(count));
-                if (im::Button("+")) {
-                    app._curve.addPoint((max_x + min_x) / 2, (max_y + min_y) / 2);
-                }
-                im::PopID();
-            }
-            im::PopID();
-        }
+        // if (app._curve._points.empty()) {
+        //     if (im::Button("Add Intermediate Point")) {
+        //         app._curve.addPoint(app._curve._lastPoint.x() / 2, app._curve._lastPoint.y() / 2);
+        //     }
+        // } else {
+        //     auto count = app._curve._points.size();
+        //     float min_x = 0.f;
+        //     float max_x = 1.f;
+        //     float min_y = 0.f;
+        //     float max_y = 1.f;
+        //     im::PushID("points");
+        //     im::Spacing();
+        //     for (decltype(count) i = 0; i < count; ++i) {
+        //         im::PushID(static_cast<int>(i));
+        //         if (i < count - 1) {
+        //             max_x = app._curve._points[i+1].x();
+        //             max_y = app._curve._points[i+1].y();
+        //         } else {
+        //             max_x = app._curve._lastPoint.x();
+        //             max_y = app._curve._lastPoint.y();
+        //         }
+        //         if (im::Button("+")) {
+        //             app._curve.insertPointAt(static_cast<int>(i), (app._curve._points[i].x() + min_x) / 2, (app._curve._points[i].y() + min_y) / 2);
+        //         }
+        //         im::Spacing();
+        //         if (im::Button("-")) {
+        //             app._curve.removePointAt(static_cast<int>(i));
+        //         }
+        //         im::SameLine();
+        //         if (im::SliderFloat("x", &app._curve._points[i].x(), min_x, max_x)) {
+        //             app._curve.solve();
+        //         }
+        //         im::Indent();
+        //         if (im::SliderFloat("y", &app._curve._points[i].y(), min_y, max_y)) {
+        //             app._curve.solve();
+        //         }
+        //         if (im::SliderFloat("r", &app._curve._radii[i], 0.f, maxRadius)) {
+        //             app._curve.solve();
+        //         }
+        //         im::Unindent();
+        //         min_x = app._curve._points[i].x();
+        //         min_y = app._curve._points[i].y();
+        //         im::PopID();
+        //         im::Spacing();
+        //     }
+        //     {
+        //         im::PushID(static_cast<int>(count));
+        //         if (im::Button("+")) {
+        //             app._curve.addPoint((max_x + min_x) / 2, (max_y + min_y) / 2);
+        //         }
+        //         im::PopID();
+        //     }
+        //     im::PopID();
+        // }
     }
 
     im::Spacing();
     if (im::CollapsingHeader("Show", ImGuiTreeNodeFlags_DefaultOpen)) {
-        im::Checkbox("Circles", &app._showCircles);
+        //im::Checkbox("Circles", &app._showCircles);
         im::Checkbox("Speed", &app._showSpeed);
         im::Checkbox("Acceleration", &app._showAccel);
         im::Checkbox("Guides", &app._showGuides);
@@ -552,8 +577,8 @@ void frame(void* userData)
 
     im::Spacing(); im::Separator(); im::Spacing();
     if (im::Button("[C]lear")) {
-        app._curve = {};
-        app._curve.solve();
+        //app._curve = {};
+        //app._curve.solve();
     }
     if (im::Button("[Q]uit")) {
         sapp_quit();
@@ -602,6 +627,12 @@ void frame(void* userData)
 
 AppState sApp = {};
 
+    // new input data:
+    // initial speed (0)
+    // final speed (0)
+    // initial progress (0)
+    // final progress (1)
+    // for each checkpoint: time, progress
 } // namespace
 
 extern "C" sapp_desc sokol_main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])

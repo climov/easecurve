@@ -1,26 +1,18 @@
+
+#include "alx/rassert.h"
+
 export module main.easecurve;
 
 import std;
+import alx.assert;
 import alx.trig;
 import alx.va;
 
 namespace trig = alx::trig;
 namespace va = alx::va;
 
-export class EaseCurve
+export struct EaseCurve
 {
-public: // ctors, dtors, copy and move
-    EaseCurve() = default;
-    ~EaseCurve() = default;
-
-    EaseCurve(const EaseCurve& ) = default;
-    EaseCurve(      EaseCurve&&) = default;
-
-    EaseCurve& operator=(const EaseCurve& ) = default;
-    EaseCurve& operator=(      EaseCurve&&) = default;
-
-public: // setters
-
     //! Set the position of the last point. The last point is also the maximum x & y for the curve
     void setLastPoint(const float x, const float y) { _lastPoint = {{x, y}}; solve(); }
 
@@ -49,7 +41,6 @@ public: // setters
     //! Remove the intermediate point at the given index
     void removePointAt(int index);
 
-public:
     //! Evaluate for the given x and return associated y value
     [[nodiscard]] float evaluate(float x) const;
     //! Get the speed of the curve for the given x
@@ -57,11 +48,11 @@ public:
     //! Get the acceleration of the curve for the given x
     [[nodiscard]] float accel(float x) const;
 
-public: // internal (private)
+    // internal (private)
     void setRadius();
     void solve();
 
-public: // internal (private)
+    // internal (private)
     using Point = va::Vec2f;
 
     // internal helper structs
@@ -114,7 +105,7 @@ public: // internal (private)
         SegmentType type;
     };
 
-public: // internal (private)
+    // internal (private)
     // params
     float _xStretch = 1.0f;
     float _minDistance = kMinDistance;
@@ -153,7 +144,7 @@ public: // internal (private)
     bool _autoFlip = true;
     bool _reduceRadii = true;
 
-public: // internal (private)
+    // internal (private)
     // default values
     static constexpr Point kFirstPoint {{0.f, 0.f}};
     static constexpr Point kDefaultLastPoint {{10.f, 10.f}};

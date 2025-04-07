@@ -75,3 +75,6 @@ assets/unused/
 
 # CLion generated files
 .idea
+
+# Build directory
+.build
