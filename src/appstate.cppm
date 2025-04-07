@@ -279,6 +279,7 @@ export void solve(Path& path)
             if (errDelta <= 1e-5f) {
                 break;
             }
+            prevError = error;
         }
     }
     const auto end = std::chrono::high_resolution_clock::now();
