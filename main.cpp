@@ -90,15 +90,15 @@ void init(AppState& app)
         .startTime          = 0,
         .startProgress      = 0,
         .startVelocity      = 0,
-        .startEaseDuration  = 5,
-        .endTime            = 100,
+        .startEaseDuration  = 3,
+        .endTime            = 30,
         .endProgress        = 100,
         .endVelocity        = 0,
-        .endEaseDuration    = 5,
+        .endEaseDuration    = 3,
         .checkpoints        = {
-            { .time = 25,   .progress = 20.f,  .easeDuration= 5    },
-            { .time = 40,   .progress = 50.f,  .easeDuration= 5    },
-            { .time = 55,   .progress = 70.f,  .easeDuration= 5    },
+            { .time = 8,    .progress = 20.f,   .easeDuration= 3    },
+            { .time = 14,   .progress = 50.f,   .easeDuration= 3    },
+            { .time = 16,   .progress = 70.f,   .easeDuration= 3    },
         },
     };
     solve(app._path);
