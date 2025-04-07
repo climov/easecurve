@@ -313,12 +313,12 @@ void drawPoly(const AppState& app)
     if (!app._showPolyLine) {
         return;
     }
-    va::Vec2f start {app._path.startTime, app._path.startProgress};// EaseCurve::kFirstPoint;
+    va::Vec2f start {{app._path.startTime, app._path.startProgress}};
     //auto i = app._path.checkpoints.size(); // app._curve._points.size();
     //i = 0;
     //for (const EaseCurve::Point& point: app._curve._points) {
     for (const Checkpoint& checkpoint: app._path.checkpoints) {
-        const va::Vec2f point {checkpoint.time, checkpoint.progress};
+        const va::Vec2f point {{checkpoint.time, checkpoint.progress}};
         //const bool valid = app._curve._pointsXValid[i] && app._curve._pointsYValid[i];
         //const sg_color color = valid ? app._curveColor : app._errorColor;
         const sg_color color = app._curveColor;
@@ -327,7 +327,7 @@ void drawPoly(const AppState& app)
         //++i;
     }
     {
-        drawDottedLine(mapToScreen(app, start), mapToScreen(app, {app._path.endTime, app._path.endProgress} /* app._curve._lastPoint*/), app._curveColor);
+        drawDottedLine(mapToScreen(app, start), mapToScreen(app, {{app._path.endTime, app._path.endProgress}} /* app._curve._lastPoint*/), app._curveColor);
     }
 }
 
