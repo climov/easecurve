@@ -99,7 +99,7 @@ void init(AppState& app)
             { .time = 16,   .progress = 70.f,   .easeDuration= 3    },
         },
     };
-    solve(app._path);
+    solve(app);
 
     fixAspectRatio(app);
 }
@@ -413,7 +413,7 @@ void event(const sapp_event* ev, void* userData)
 
 void frame(void* userData)
 {
-    //const auto now = std::chrono::high_resolution_clock::now();
+    [[maybe_unused]] const auto now = std::chrono::high_resolution_clock::now();
     AppState& app = *static_cast<AppState*>(userData);
 
     // Begin a render pass.
@@ -469,11 +469,11 @@ void frame(void* userData)
         im::Separator();
         if (im::SliderFloat("End Time", &app._path.endTime, 0.f, 100.f)) {
             fixAspectRatioByY(app);
-            solve(app._path);
+            solve(app);
         }
         if (im::SliderFloat("End Progress", &app._path.endProgress, 0.f, 100.f)) {
             fixAspectRatioByX(app);
-            solve(app._path);
+            solve(app);
         }
         //im::Separator();
         //if (im::Checkbox("Autoflip", &app._curve._autoFlip)) {

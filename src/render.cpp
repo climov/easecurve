@@ -199,55 +199,39 @@ void drawCoordinates(const AppState& app)
     }
 }
 
-void drawCurve(const AppState& app)
+void drawProgress(const AppState& app)
 {
-    constexpr int linesPerSegment = 1000;
-    const float xIncrement = app._path.endTime / linesPerSegment;
-    const float xStep = xIncrement / 100;
-    float prevX = app._path.startTime;
-    float prevY = 0;
-    for (int i = 1; i <= linesPerSegment; ++i) {
-        const float x = i * xIncrement;
-        const float y = prevY + progressBetween(app._path, prevX, x, xStep);
-        drawSolidLine(mapToScreen(app, {{prevX, prevY}}), mapToScreen(app, {{x, y}}), app._curveColor);
-        prevX = x;
-        prevY = y;
+    if (app.tessellatedProgress.empty()) {
+        return;
+    }
+    va::Vec2f prevPos = app.tessellatedProgress.front();
+    for (const va::Vec2f pos: app.tessellatedProgress) {
+        drawSolidLine(mapToScreen(app, prevPos), mapToScreen(app, pos), app._curveColor);
+        prevPos = pos;
     }
 }
 
-void drawSpeed(const AppState& app)
+void drawVelocity(const AppState& app)
 {
-    constexpr int linesPerSegment = 1000;
-    if (!app._showSpeed) {
+    if (!app._showSpeed || app.tessellatedVelocity.empty()) {
         return;
     }
-    const float xIncrement = app._path.endTime / linesPerSegment;
-    float prevX = app._path.startTime;
-    float prevY = velocityAt(app._path, prevX);
-    for (int i = 1; i <= linesPerSegment; ++i) {
-        const float x = i * xIncrement;
-        const float y = velocityAt(app._path, x);
-        drawSolidLine(mapToScreen(app, {{prevX, prevY}}), mapToScreen(app, {{x, y}}), app._speedColor);
-        prevX = x;
-        prevY = y;
+    va::Vec2f prevPos = app.tessellatedVelocity.front();
+    for (const va::Vec2f pos: app.tessellatedVelocity) {
+        drawSolidLine(mapToScreen(app, prevPos), mapToScreen(app, pos), app._speedColor);
+        prevPos = pos;
     }
 }
 
 void drawAccel(const AppState& app)
 {
-    constexpr int linesPerSegment = 1000;
-    if (!app._showAccel) {
+    if (!app._showAccel || app.tessellatedAccel.empty()) {
         return;
     }
-    const float xIncrement = app._path.endTime / linesPerSegment;
-    float prevX = app._path.startTime;
-    float prevY = accelAt(app._path, prevX);
-    for (int i = 1; i <= linesPerSegment; ++i) {
-        const float x = i * xIncrement;
-        const float y = accelAt(app._path, x);
-        drawSolidLine(mapToScreen(app, {{prevX, prevY}}), mapToScreen(app, {{x, y}}), app._accelColor);
-        prevX = x;
-        prevY = y;
+    va::Vec2f prevPos = app.tessellatedAccel.front();
+    for (const va::Vec2f pos: app.tessellatedAccel) {
+        drawSolidLine(mapToScreen(app, prevPos), mapToScreen(app, pos), app._accelColor);
+        prevPos = pos;
     }
 }
 
@@ -369,8 +353,8 @@ void render(const AppState& app)
     drawCoordinates(app);
     drawPoly(app);
     //drawCircles(app);
-    drawCurve(app);
-    drawSpeed(app);
+    drawProgress(app);
+    drawVelocity(app);
     drawAccel(app);
 
     drawMouseCursor(app);
