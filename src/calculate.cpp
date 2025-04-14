@@ -11,19 +11,19 @@ import alx.trig;
 namespace {
 
 [[maybe_unused]]
-constexpr float easeInOutSine(const float t)
+float easeInOutSine(const float t)
 {
     return 0.5f * (1.f + std::sin(alx::trig::pi_v<float> * (t - 0.5f)));
 }
 
 [[maybe_unused]]
-constexpr float easeInOutSineDerivative(const float t)
+float easeInOutSineDerivative(const float t)
 {
     return 0.5f * alx::trig::pi_v<float> * std::cos(alx::trig::pi_v<float> * (t - 0.5f));
 }
 
 [[maybe_unused]]
-constexpr float easeInOutSineIntegral(const float t)
+float easeInOutSineIntegral(const float t)
 {
     return 0.5f * (t - std::cos(alx::trig::pi_v<float> * (t - .5f)) / alx::trig::pi_v<float>);
 }
