@@ -1,9 +1,11 @@
 
-#include "alx/rassert.h"
+#include "alx/trace.h"
 
 import std;
 
 import sokol;
+import sokol.color;
+
 import imgui;
 
 import alx.assert;
@@ -11,6 +13,7 @@ import alx.va;
 
 import main.appstate;
 
+using namespace sokol::color;
 namespace im = ImGui;
 namespace va = alx::va;
 
@@ -94,12 +97,13 @@ void init(AppState& app)
         .endVelocity        = 0,
         .endEaseDuration    = 3,
         .checkpoints        = {
-            { .time = 8,    .progress = 20.f,   .easeDuration= 3    },
+            { .time = 8,    .progress = 20.f,   .easeDuration= 5    },
             { .time = 14,   .progress = 50.f,   .easeDuration= 3    },
-            { .time = 16,   .progress = 70.f,   .easeDuration= 3    },
+            { .time = 21,   .progress = 70.f,   .easeDuration= 3    },
         },
     };
-    solve(app);
+    solve(app, app._resultsLinear);
+    solve(app, app._resultsSine);
 
     fixAspectRatio(app);
 }
@@ -430,6 +434,7 @@ void frame(void* userData)
     };
     simgui_new_frame(&framedesc);
 
+    im::SetNextWindowSize({0.f, 0.f});
     im::Begin("Info");
 
     im::Text("%d fps", static_cast<int>(1./sapp_frame_duration()));
@@ -469,11 +474,13 @@ void frame(void* userData)
         im::Separator();
         if (im::SliderFloat("End Time", &app._path.endTime, 0.f, 100.f)) {
             fixAspectRatioByY(app);
-            solve(app);
+            solve(app, app._resultsLinear);
+            solve(app, app._resultsSine);
         }
         if (im::SliderFloat("End Progress", &app._path.endProgress, 0.f, 100.f)) {
             fixAspectRatioByX(app);
-            solve(app);
+            solve(app, app._resultsLinear);
+            solve(app, app._resultsSine);
         }
         //im::Separator();
         //if (im::Checkbox("Autoflip", &app._curve._autoFlip)) {
@@ -546,6 +553,15 @@ void frame(void* userData)
 
     im::Spacing();
     if (im::CollapsingHeader("Show", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (im::Checkbox("Use non-linear (sine) easing", &app._useSineEasing)) {
+            app._selectedResults = app._useSineEasing ? &app._resultsSine : &app._resultsLinear;
+        }
+        int selectedResult = std::min(app._selectedResult, static_cast<int>(app._selectedResults->size()) - 1);
+        if (im::SliderInt("Result Step", &selectedResult, 0, static_cast<int>(app._selectedResults->size()) - 1)) {
+            fdbg("Changed");
+            app._selectedResult = selectedResult;
+        }
+        im::Text("Error: %f", (*app._selectedResults)[static_cast<size_t>(selectedResult)].totalErrorAbs);
         //im::Checkbox("Circles", &app._showCircles);
         im::Checkbox("Speed", &app._showSpeed);
         im::Checkbox("Acceleration", &app._showAccel);
@@ -556,11 +572,15 @@ void frame(void* userData)
     im::Spacing();
     if (im::CollapsingHeader("Colors"/*, ImGuiTreeNodeFlags_DefaultOpen*/)) {
         ColorEdit("Window Bg", app._windowBg);
-        ColorEditAlpha("Curve", app._curveColor);
+        if (ColorEditAlpha("Curve", app._curveColor)) {
+            app._speedColor = sg_color_lerp(app._curveColor, sg_white, .70f); // sg_yellow;
+            app._accelColor = sg_color_lerp(app._curveColor, sg_black, .25f); //sg_cyan;
+
+        }
         ColorEditAlpha("Axis", app._axisColor);
         ColorEditAlpha("Guides", app._guideColor);
-        ColorEditAlpha("Speed", app._speedColor);
-        ColorEditAlpha("Acceleration", app._accelColor);
+        //ColorEditAlpha("Speed", app._speedColor);
+        //ColorEditAlpha("Acceleration", app._accelColor);
         ColorEditAlpha("Error", app._errorColor);
     }
 
@@ -581,10 +601,10 @@ void frame(void* userData)
     }
 
     im::Spacing(); im::Separator(); im::Spacing();
-    if (im::Button("[C]lear")) {
+    //if (im::Button("[C]lear")) {
         //app._curve = {};
         //app._curve.solve();
-    }
+    //}
     if (im::Button("[Q]uit")) {
         sapp_quit();
     }
@@ -603,7 +623,7 @@ void frame(void* userData)
         //sgp_project(-ratio, ratio, 1.0f, -1.0f);
         sgp_project(0, static_cast<float>(windowSize.x()), 0, static_cast<float>(windowSize.y()));
 
-        render(app);
+        render(app, (*app._selectedResults)[static_cast<size_t>(std::min(app._selectedResult, static_cast<int>(app._selectedResults->size()) - 1))]);
 
         // Dispatch all draw commands to Sokol GFX.
         sgp_flush();

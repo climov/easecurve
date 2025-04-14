@@ -13,7 +13,7 @@ using namespace trig::degree_literals;
 
 namespace {
 
-inline void setColor(const sg_color color)
+void setColor(const sg_color color)
 {
     sgp_set_color(color.r, color.g, color.b, color.a);
 }
@@ -155,27 +155,27 @@ void drawDottedEllipse(const AppState& app, const va::Vec2f center, const float 
     sgp_draw_lines(vertices.data(), static_cast<unsigned>(vertices.size()));
 }
 
-void drawCheckpoint(const AppState& app, const float time, const float progress, const float endProgress, const float easeDuration, const float adjustedEaseDuration, const bool easeDurationBefore, const bool easeDurationAfter)
+void drawCheckpoint(const AppState& app, const Result& result, const float time, const float progress, const float easeDuration, const float adjustedEaseDuration, const bool easeDurationBefore, const bool easeDurationAfter)
 {
     // horiz
     drawDottedLine(mapToScreen(app, {{0, progress}}), mapToScreen(app, {{time, progress}}), app._guideColor);
     // vert
     drawDottedLine(mapToScreen(app, {{time, 0}}), mapToScreen(app, {{time, progress}}), app._guideColor);
     if (easeDurationBefore) {
-        drawDottedLine(mapToScreen(app, {{time - adjustedEaseDuration, 0}}), mapToScreen(app, {{time - adjustedEaseDuration, endProgress}}), app._guideColor);
+        drawDottedLine(mapToScreen(app, {{time - adjustedEaseDuration, 0}}), mapToScreen(app, {{time - adjustedEaseDuration, progressAt(app._path, result, time - adjustedEaseDuration)}}), app._guideColor);
         if (easeDuration > adjustedEaseDuration) {
-            drawDottedLine(mapToScreen(app, {{time - easeDuration, 0}}), mapToScreen(app, {{time - easeDuration, endProgress}}), app._errorColor);
+            drawDottedLine(mapToScreen(app, {{time - easeDuration, 0}}), mapToScreen(app, {{time - easeDuration, progressAt(app._path, result, time - easeDuration)}}), app._errorColor);
         }
     }
     if (easeDurationAfter) {
-        drawDottedLine(mapToScreen(app, {{time + adjustedEaseDuration, 0}}), mapToScreen(app, {{time + adjustedEaseDuration, endProgress}}), app._guideColor);
+        drawDottedLine(mapToScreen(app, {{time + adjustedEaseDuration, 0}}), mapToScreen(app, {{time + adjustedEaseDuration, progressAt(app._path, result, time + adjustedEaseDuration)}}), app._guideColor);
         if (easeDuration > adjustedEaseDuration) {
-            drawDottedLine(mapToScreen(app, {{time + easeDuration, 0}}), mapToScreen(app, {{time + easeDuration, endProgress}}), app._errorColor);
+            drawDottedLine(mapToScreen(app, {{time + easeDuration, 0}}), mapToScreen(app, {{time + easeDuration, progressAt(app._path, result, time + easeDuration)}}), app._errorColor);
         }
     }
 };
 
-void drawCoordinates(const AppState& app)
+void drawCoordinates(const AppState& app, const Result& result)
 {
     const va::Vec2f windowSize {{sapp_widthf(), sapp_heightf()}};
     const va::Vec2f border {{app._border.x() * 1.f, app._border.y() * 1.f}};
@@ -189,47 +189,47 @@ void drawCoordinates(const AppState& app)
 
     if (app._showGuides) {
         // start point
-        drawCheckpoint(app, app._path.startTime, app._path.startProgress, app._path.endProgress, app._path.startEaseDuration, app._path.adjustedStartEaseDuration, false, true);
+        drawCheckpoint(app, result, app._path.startTime, app._path.startProgress, app._path.startEaseDuration, app._path.adjustedStartEaseDuration, false, true);
         // end point
-        drawCheckpoint(app, app._path.endTime, app._path.endProgress, app._path.endProgress, app._path.endEaseDuration, app._path.adjustedEndEaseDuration, true, false);
+        drawCheckpoint(app, result, app._path.endTime, app._path.endProgress, app._path.endEaseDuration, app._path.adjustedEndEaseDuration, true, false);
         // checkpoints
         for (const Checkpoint& checkpoint: app._path.checkpoints) {
-            drawCheckpoint(app, checkpoint.time, checkpoint.progress, app._path.endProgress, checkpoint.easeDuration / 2.f, checkpoint.adjustedEaseDuration / 2.f, true, true);
+            drawCheckpoint(app, result, checkpoint.time, checkpoint.progress, checkpoint.easeDuration / 2.f, checkpoint.adjustedEaseDuration / 2.f, true, true);
         }
     }
 }
 
-void drawProgress(const AppState& app)
+void drawProgress(const AppState& app, const Result& result)
 {
-    if (app.tessellatedProgress.empty()) {
+    if (result.tessellatedProgress.empty()) {
         return;
     }
-    va::Vec2f prevPos = app.tessellatedProgress.front();
-    for (const va::Vec2f pos: app.tessellatedProgress) {
+    va::Vec2f prevPos = result.tessellatedProgress.front();
+    for (const va::Vec2f pos: result.tessellatedProgress) {
         drawSolidLine(mapToScreen(app, prevPos), mapToScreen(app, pos), app._curveColor);
         prevPos = pos;
     }
 }
 
-void drawVelocity(const AppState& app)
+void drawVelocity(const AppState& app, const Result& result)
 {
-    if (!app._showSpeed || app.tessellatedVelocity.empty()) {
+    if (!app._showSpeed || result.tessellatedVelocity.empty()) {
         return;
     }
-    va::Vec2f prevPos = app.tessellatedVelocity.front();
-    for (const va::Vec2f pos: app.tessellatedVelocity) {
+    va::Vec2f prevPos = result.tessellatedVelocity.front();
+    for (const va::Vec2f pos: result.tessellatedVelocity) {
         drawSolidLine(mapToScreen(app, prevPos), mapToScreen(app, pos), app._speedColor);
         prevPos = pos;
     }
 }
 
-void drawAccel(const AppState& app)
+void drawAccel(const AppState& app, const Result& result)
 {
-    if (!app._showAccel || app.tessellatedAccel.empty()) {
+    if (!app._showAccel || result.tessellatedAccel.empty()) {
         return;
     }
-    va::Vec2f prevPos = app.tessellatedAccel.front();
-    for (const va::Vec2f pos: app.tessellatedAccel) {
+    va::Vec2f prevPos = result.tessellatedAccel.front();
+    for (const va::Vec2f pos: result.tessellatedAccel) {
         drawSolidLine(mapToScreen(app, prevPos), mapToScreen(app, pos), app._accelColor);
         prevPos = pos;
     }
@@ -344,18 +344,18 @@ void drawMouseCursor(const AppState& app)
 
 } // namespace
 
-void render(const AppState& app)
+void render(const AppState& app, const Result& result)
 {
     // Clear the frame buffer.
     setColor(app._windowBg);
     sgp_clear();
 
-    drawCoordinates(app);
+    drawCoordinates(app, result);
     drawPoly(app);
     //drawCircles(app);
-    drawProgress(app);
-    drawVelocity(app);
-    drawAccel(app);
+    drawProgress(app, result);
+    drawVelocity(app, result);
+    drawAccel(app, result);
 
     drawMouseCursor(app);
 }
