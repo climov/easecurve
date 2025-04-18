@@ -155,27 +155,68 @@ void drawDottedEllipse(const AppState& app, const va::Vec2f center, const float 
     sgp_draw_lines(vertices.data(), static_cast<unsigned>(vertices.size()));
 }
 
-void drawCheckpoint(const AppState& app, const Result& result, const float time, const float progress, const float easeDuration, const float adjustedEaseDuration, const bool easeDurationBefore, const bool easeDurationAfter)
+[[maybe_unused]]
+void drawFilledRectWithSize(const va::Vec2f origin, const va::Vec2f size, const sg_color color)
+{
+    setColor(color);
+    sgp_draw_filled_rect(origin.x(), origin.y(), size.x(), size.y());
+}
+
+[[maybe_unused]]
+void drawFilledRectBetween(const va::Vec2f corner1, const va::Vec2f corner2, const sg_color color)
+{
+    setColor(color);
+    sgp_draw_filled_rect(corner1.x(), corner1.y(), corner2.x() - corner1.x(), corner2.y() - corner1.y());
+}
+
+void drawCheckpointEaseInterval(const AppState& app, const float time, const float progress, const float easeDuration, const float adjustedEaseDuration, const bool easeDurationBefore, const bool easeDurationAfter)
+{
+    if (easeDuration > adjustedEaseDuration) {
+        sg_color color = app._errorColor;
+        color.a = .3f;
+
+        const va::Vec2f corner1 = mapToScreen(app, {{time - (easeDurationBefore ? easeDuration : 0.f), progress}});
+        const va::Vec2f corner2 = mapToScreen(app, {{time + (easeDurationAfter ? easeDuration : 0.f), 0.f}});
+        drawFilledRectBetween(corner1, corner2, color);
+
+        color.a = .7f;
+        drawSolidLine(corner1, {{corner2.x(), corner1.y()}}, color);
+
+        if (easeDurationBefore) {
+            drawSolidLine(mapToScreen(app, {{time - easeDuration, 0}}), mapToScreen(app, {{time - easeDuration, progress}}), color);
+        }
+        if (easeDurationAfter) {
+            drawSolidLine(mapToScreen(app, {{time + easeDuration, 0}}), mapToScreen(app, {{time + easeDuration, progress}}), color);
+        }
+    }
+};
+
+void drawCheckpoint(const AppState& app, const float time, const float progress, const float adjustedEaseDuration, const bool easeDurationBefore, const bool easeDurationAfter)
 {
     // horiz
     drawDottedLine(mapToScreen(app, {{0, progress}}), mapToScreen(app, {{time, progress}}), app._guideColor);
     // vert
     drawDottedLine(mapToScreen(app, {{time, 0}}), mapToScreen(app, {{time, progress}}), app._guideColor);
+
+    sg_color color = app._guideColor;
+    color.a = .3f;
+
+    const va::Vec2f corner1 = mapToScreen(app, {{time - (easeDurationBefore ? adjustedEaseDuration : 0.f), progress}});
+    const va::Vec2f corner2 = mapToScreen(app, {{time + (easeDurationAfter ? adjustedEaseDuration : 0.f), 0.f}});
+    drawFilledRectBetween(corner1, corner2, color);
+
+    color.a = .7f;
+    drawSolidLine(corner1, {{corner2.x(), corner1.y()}}, color);
+
     if (easeDurationBefore) {
-        drawDottedLine(mapToScreen(app, {{time - adjustedEaseDuration, 0}}), mapToScreen(app, {{time - adjustedEaseDuration, progressAt(app._path, result, time - adjustedEaseDuration)}}), app._guideColor);
-        if (easeDuration > adjustedEaseDuration) {
-            drawDottedLine(mapToScreen(app, {{time - easeDuration, 0}}), mapToScreen(app, {{time - easeDuration, progressAt(app._path, result, time - easeDuration)}}), app._errorColor);
-        }
+        drawSolidLine(mapToScreen(app, {{time - adjustedEaseDuration, 0}}), mapToScreen(app, {{time - adjustedEaseDuration, progress}}), color);
     }
     if (easeDurationAfter) {
-        drawDottedLine(mapToScreen(app, {{time + adjustedEaseDuration, 0}}), mapToScreen(app, {{time + adjustedEaseDuration, progressAt(app._path, result, time + adjustedEaseDuration)}}), app._guideColor);
-        if (easeDuration > adjustedEaseDuration) {
-            drawDottedLine(mapToScreen(app, {{time + easeDuration, 0}}), mapToScreen(app, {{time + easeDuration, progressAt(app._path, result, time + easeDuration)}}), app._errorColor);
-        }
+        drawSolidLine(mapToScreen(app, {{time + adjustedEaseDuration, 0}}), mapToScreen(app, {{time + adjustedEaseDuration, progress}}), color);
     }
 };
 
-void drawCoordinates(const AppState& app, const Result& result)
+void drawCoordinates(const AppState& app)
 {
     const va::Vec2f windowSize {{sapp_widthf(), sapp_heightf()}};
     const va::Vec2f border {{app._border.x() * 1.f, app._border.y() * 1.f}};
@@ -189,12 +230,21 @@ void drawCoordinates(const AppState& app, const Result& result)
 
     if (app._showGuides) {
         // start point
-        drawCheckpoint(app, result, app._path.startTime, app._path.startProgress, app._path.startEaseDuration, app._path.adjustedStartEaseDuration, false, true);
+        drawCheckpointEaseInterval(app, app._path.startTime, app._path.endProgress, app._path.startEaseDuration, app._path.adjustedStartEaseDuration, false, true);
         // end point
-        drawCheckpoint(app, result, app._path.endTime, app._path.endProgress, app._path.endEaseDuration, app._path.adjustedEndEaseDuration, true, false);
+        drawCheckpointEaseInterval(app, app._path.endTime, app._path.endProgress, app._path.endEaseDuration, app._path.adjustedEndEaseDuration, true, false);
         // checkpoints
         for (const Checkpoint& checkpoint: app._path.checkpoints) {
-            drawCheckpoint(app, result, checkpoint.time, checkpoint.progress, checkpoint.easeDuration / 2.f, checkpoint.adjustedEaseDuration / 2.f, true, true);
+            drawCheckpointEaseInterval(app, checkpoint.time, checkpoint.progress, checkpoint.easeDuration / 2.f, checkpoint.adjustedEaseDuration / 2.f, true, true);
+        }
+
+        // start point
+        drawCheckpoint(app, app._path.startTime, app._path.endProgress, app._path.adjustedStartEaseDuration, false, true);
+        // end point
+        drawCheckpoint(app, app._path.endTime, app._path.endProgress, app._path.adjustedEndEaseDuration, true, false);
+        // checkpoints
+        for (const Checkpoint& checkpoint: app._path.checkpoints) {
+            drawCheckpoint(app, checkpoint.time, checkpoint.progress, checkpoint.adjustedEaseDuration / 2.f, true, true);
         }
     }
 }
@@ -346,11 +396,12 @@ void drawMouseCursor(const AppState& app)
 
 void render(const AppState& app, const Result& result)
 {
+    sgp_set_blend_mode(SGP_BLENDMODE_BLEND);
     // Clear the frame buffer.
     setColor(app._windowBg);
     sgp_clear();
 
-    drawCoordinates(app, result);
+    drawCoordinates(app);
     drawPoly(app);
     //drawCircles(app);
     drawProgress(app, result);

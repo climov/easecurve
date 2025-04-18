@@ -87,20 +87,38 @@ void init(AppState& app)
     //app._curve.addPoint(0.6f, 0.4f);
     //app._curve.addPoint(0.8f, 0.6f);
 
+    // app._path = {
+    //     .startTime          = 0,
+    //     .startProgress      = 0,
+    //     .startVelocity      = 0,
+    //     .startEaseDuration  = 3,
+    //     .endTime            = 30,
+    //     .endProgress        = 100,
+    //     .endVelocity        = 0,
+    //     .endEaseDuration    = 3,
+    //     .checkpoints        = {
+    //         { .time = 8,    .progress = 20.f,   .easeDuration= 5    },
+    //         { .time = 14,   .progress = 50.f,   .easeDuration= 3    },
+    //         { .time = 21,   .progress = 70.f,   .easeDuration= 3    },
+    //     },
+    // };
     app._path = {
-        .startTime          = 0,
-        .startProgress      = 0,
-        .startVelocity      = 0,
-        .startEaseDuration  = 3,
-        .endTime            = 30,
-        .endProgress        = 100,
-        .endVelocity        = 0,
-        .endEaseDuration    = 3,
-        .checkpoints        = {
-            { .time = 8,    .progress = 20.f,   .easeDuration= 5    },
-            { .time = 14,   .progress = 50.f,   .easeDuration= 3    },
-            { .time = 21,   .progress = 70.f,   .easeDuration= 3    },
-        },
+        .startTime          = 12.786304f,
+        .startProgress      = 0.0f,
+        .startEaseDuration  = 5.0f,
+        .endTime            = 65.780289f,
+        .endProgress        = 1.0f,
+        .endEaseDuration    = 5.0f,
+        .checkpoints = {
+            { .time = 24.17927f,    .progress = 0.158143f,  .easeDuration= 5.0f },
+            { .time = 31.903965f,   .progress = 0.332121f,  .easeDuration= 5.0f },
+            { .time = 36.018059f,   .progress = 0.388404f,  .easeDuration= 5.0f },
+            { .time = 38.461151f,   .progress = 0.433527f,  .easeDuration= 5.0f },
+            { .time = 41.602318f,   .progress = 0.481825f,  .easeDuration= 5.0f },
+            { .time = 45.8325f,     .progress = 0.543464f,  .easeDuration= 5.0f },
+            { .time = 53.95076f,    .progress = 0.686501f,  .easeDuration= 5.0f },
+            { .time = 58.137657f,   .progress = 0.865331f,  .easeDuration= 5.0f },
+        }
     };
     solve(app, app._resultsLinear);
     solve(app, app._resultsSine);
@@ -558,7 +576,6 @@ void frame(void* userData)
         }
         int selectedResult = std::min(app._selectedResult, static_cast<int>(app._selectedResults->size()) - 1);
         if (im::SliderInt("Result Step", &selectedResult, 0, static_cast<int>(app._selectedResults->size()) - 1)) {
-            fdbg("Changed");
             app._selectedResult = selectedResult;
         }
         im::Text("Error: %f", (*app._selectedResults)[static_cast<size_t>(selectedResult)].totalErrorAbs);
