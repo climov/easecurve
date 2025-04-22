@@ -98,6 +98,11 @@ export struct AppState
     bool                    _keepAspectRatio    = false;
 };
 
-export void solve(AppState& app, std::vector<Result>& results);
+export void solve(AppState& app, std::vector<Result>& results, bool adjustEase);
 export void render(const AppState& app, const Result& result);
+export void alignEaseDurations(Path& path, const int modifiedIndex);
+export void adjustEaseDurationsP(Path& path);
+export void adjustEaseDurations1(Path& path);
+export void adjustEaseDurations2(Path& path);
+
 float progressAt(const Path& path, const Result& result, const float time);

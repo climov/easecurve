@@ -43,6 +43,7 @@ else ()
         -Wno-missing-prototypes
         -Wno-switch-default
         -Wno-missing-designated-field-initializers
+        -Wno-float-equal
     )
 endif ()
 

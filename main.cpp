@@ -111,7 +111,7 @@ void init(AppState& app)
         .endEaseDuration    = 5.0f,
         .checkpoints = {
             { .time = 24.17927f,    .progress = 0.158143f,  .easeDuration= 5.0f },
-            { .time = 31.903965f,   .progress = 0.332121f,  .easeDuration= 5.0f },
+            { .time = 31.903965f,   .progress = 0.332121f,  .easeDuration= 4.4f },
             { .time = 36.018059f,   .progress = 0.388404f,  .easeDuration= 5.0f },
             { .time = 38.461151f,   .progress = 0.433527f,  .easeDuration= 5.0f },
             { .time = 41.602318f,   .progress = 0.481825f,  .easeDuration= 5.0f },
@@ -120,8 +120,8 @@ void init(AppState& app)
             { .time = 58.137657f,   .progress = 0.865331f,  .easeDuration= 5.0f },
         }
     };
-    solve(app, app._resultsLinear);
-    solve(app, app._resultsSine);
+    solve(app, app._resultsLinear, true);
+    solve(app, app._resultsSine, true);
 
     fixAspectRatio(app);
 }
@@ -492,13 +492,13 @@ void frame(void* userData)
         im::Separator();
         if (im::SliderFloat("End Time", &app._path.endTime, 0.f, 100.f)) {
             fixAspectRatioByY(app);
-            solve(app, app._resultsLinear);
-            solve(app, app._resultsSine);
+            solve(app, app._resultsLinear, true);
+            solve(app, app._resultsSine, true);
         }
         if (im::SliderFloat("End Progress", &app._path.endProgress, 0.f, 100.f)) {
             fixAspectRatioByX(app);
-            solve(app, app._resultsLinear);
-            solve(app, app._resultsSine);
+            solve(app, app._resultsLinear, true);
+            solve(app, app._resultsSine, true);
         }
         //im::Separator();
         //if (im::Checkbox("Autoflip", &app._curve._autoFlip)) {
@@ -511,6 +511,56 @@ void frame(void* userData)
         //im::Text("Time: %lld us", app._curve._solveTimeUs);
     }
 
+    im::Spacing();
+    if (im::CollapsingHeader("Adjusted ease durations", ImGuiTreeNodeFlags_DefaultOpen)) {
+        {
+            const float maxVal = std::min(app._path.startEaseDuration, (app._path.checkpoints.empty() ? app._path.endTime : app._path.checkpoints.front().time) - app._path.startTime);
+            im::PushID("easeDuration");
+            if (im::SliderFloat("Start", &app._path.adjustedStartEaseDuration, 0.f, maxVal)) {
+                alignEaseDurations(app._path, -1);
+                solve(app, app._resultsLinear, false);
+                solve(app, app._resultsSine, false);
+            }
+        }
+        int i = 0;
+        float prevTime = app._path.startTime;
+        for (Checkpoint& checkpoint: app._path.checkpoints) {
+            im::PushID(i);
+            const float currentTime = checkpoint.time;
+            const float nextTime = i == static_cast<int>(app._path.checkpoints.size()) - 1 ? app._path.endTime : app._path.checkpoints[static_cast<size_t>(i + 1)].time;
+            const float maxVal = std::min(checkpoint.easeDuration, std::min(currentTime - prevTime, nextTime - currentTime) * 2.f);
+            if (im::SliderFloat(std::format("Checkpoint {}", i).c_str(), &checkpoint.adjustedEaseDuration, 0.f, maxVal)) {
+                alignEaseDurations(app._path, i);
+                solve(app, app._resultsLinear, false);
+                solve(app, app._resultsSine, false);
+            }
+            ++i;
+            prevTime = currentTime;
+            im::PopID();
+        }
+        im::PopID();
+        const float maxVal = std::min(app._path.endEaseDuration, app._path.endTime - prevTime);
+        if (im::SliderFloat("End", &app._path.adjustedEndEaseDuration, 0.f, maxVal)) {
+            alignEaseDurations(app._path, static_cast<int>(app._path.checkpoints.size()));
+            solve(app, app._resultsLinear, false);
+            solve(app, app._resultsSine, false);
+        }
+        if (im::Button("Auto calculate (P)")) {
+            adjustEaseDurationsP(app._path);
+            solve(app, app._resultsLinear, false);
+            solve(app, app._resultsSine, false);
+        }
+        if (im::Button("Auto calculate (C1)")) {
+            adjustEaseDurations1(app._path);
+            solve(app, app._resultsLinear, false);
+            solve(app, app._resultsSine, false);
+        }
+        if (im::Button("Auto calculate (C2)")) {
+            adjustEaseDurations2(app._path);
+            solve(app, app._resultsLinear, false);
+            solve(app, app._resultsSine, false);
+        }
+    }
     im::Spacing();
     if (im::CollapsingHeader("Intermediate points", ImGuiTreeNodeFlags_DefaultOpen)) {
         // if (app._curve._points.empty()) {
